@@ -1,19 +1,115 @@
-import StatCard from '@/components/admin/StatCard'
-import { requireUser } from '@/lib/auth/requireUser'
+import "./dashboard.css";
 
-export default async function DashboardPage() {
-  await requireUser()
+export default function Dashboard() {
+
+  const balance = 12500;
+
+  const transactions = [
+
+    {
+      id: "TX123",
+      amount: 1000,
+      date: "Today"
+    },
+
+    {
+      id: "TX124",
+      amount: 2000,
+      date: "Yesterday"
+    }
+
+  ];
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">
-        User Dashboard
-      </h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
-        <StatCard title="Wallet Balance" value="₦0" />
-        <StatCard title="Transactions" value={0} />
+    <div className="dashboard-container">
+
+
+      {/* HEADER */}
+
+      <div className="dashboard-header">
+
+        <h2>Welcome, User</h2>
+
+        <p>Manage your VTU services</p>
+
       </div>
+
+
+      {/* WALLET */}
+
+      <div className="wallet-card">
+
+        <p>Wallet Balance</p>
+
+        <div className="wallet-balance">
+
+          ₦{balance.toLocaleString()}
+
+        </div>
+
+      </div>
+
+
+      {/* ACTIONS */}
+
+      <div className="actions">
+
+
+        <div className="action-card">
+
+          Buy Airtime
+
+        </div>
+
+
+        <div className="action-card">
+
+          Buy Data
+
+        </div>
+
+
+        <div className="action-card">
+
+          Buy Electricity
+
+        </div>
+
+
+        <div className="action-card">
+
+          Fund Wallet
+
+        </div>
+
+
+      </div>
+
+
+      {/* TRANSACTIONS */}
+
+      <div className="transaction-section">
+
+        <h3>Recent Transactions</h3>
+
+
+        {transactions.map(tx => (
+
+          <div key={tx.id} className="transaction-card">
+
+            ₦{tx.amount} — {tx.date}
+
+          </div>
+
+        ))}
+
+
+      </div>
+
+
     </div>
-  )
+
+  );
+
 }
