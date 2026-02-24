@@ -1,40 +1,72 @@
-import { NextRequest, NextResponse } from 'next/server'
-import supabase from '@/lib/supabase/client'
+"use client";
 
-export async function POST(req: NextRequest) {
-  try {
-    const { email, password } = await req.json()
+import { useState } from "react";
+import { createBrowserClient } from "@supabase/ssr";
+import { useRouter } from "next/navigation";
 
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Missing credentials' },
-        { status: 400 }
-      )
-    }
+export default function LoginPage() {
 
-    const { data, error } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+  const router = useRouter();
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  async function handleLogin(e: any) {
+
+    e.preventDefault();
+
+    const { error } = await supabase.auth.signInWithPassword({
+
+      email,
+      password,
+
+    });
 
     if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 401 }
-      )
+
+      alert(error.message);
+
+    } else {
+
+      router.push("/dashboard");
+
     }
 
-    return NextResponse.json({
-      success: true,
-      session: data.session,
-      user: data.user,
-    })
-
-  } catch {
-    return NextResponse.json(
-      { error: 'Server error' },
-      { status: 500 }
-    )
   }
+
+  return (
+
+    <div>
+
+      <h1>Login</h1>
+
+      <form onSubmit={handleLogin}>
+
+        <input
+          type="email"
+          placeholder="Email"
+          onChange={(e)=>setEmail(e.target.value)}
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          onChange={(e)=>setPassword(e.target.value)}
+        />
+
+        <button type="submit">
+          Login
+        </button>
+
+      </form>
+
+    </div>
+
+  );
+
 }

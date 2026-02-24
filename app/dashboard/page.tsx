@@ -1,109 +1,77 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import "./dashboard.css";
 
 export default function Dashboard() {
 
-  const balance = 12500;
+  const [balance, setBalance] = useState(0);
 
-  const transactions = [
+  useEffect(() => {
 
-    {
-      id: "TX123",
-      amount: 1000,
-      date: "Today"
-    },
+    fetch("/api/wallet")
 
-    {
-      id: "TX124",
-      amount: 2000,
-      date: "Yesterday"
-    }
+      .then(res => res.json())
 
-  ];
+      .then(data => {
+        setBalance(data.balance);
+      })
+
+      .catch(() => {
+        setBalance(0);
+      });
+
+  }, []);
 
   return (
 
-    <div className="dashboard-container">
+    <div className="dashboard">
 
+      <h1>Welcome, User</h1>
 
-      {/* HEADER */}
+      <p className="subtitle">
+        Manage your VTU services
+      </p>
 
-      <div className="dashboard-header">
-
-        <h2>Welcome, User</h2>
-
-        <p>Manage your VTU services</p>
-
-      </div>
-
-
-      {/* WALLET */}
 
       <div className="wallet-card">
 
-        <p>Wallet Balance</p>
+        <h2>Wallet Balance</h2>
 
-        <div className="wallet-balance">
-
+        <p className="balance">
           ₦{balance.toLocaleString()}
-
-        </div>
+        </p>
 
       </div>
 
-
-      {/* ACTIONS */}
 
       <div className="actions">
 
-
-        <div className="action-card">
-
+        <Link href="/dashboard/buy-airtime" className="btn">
           Buy Airtime
+        </Link>
 
-        </div>
-
-
-        <div className="action-card">
-
+        <Link href="/dashboard/buy-data" className="btn">
           Buy Data
+        </Link>
 
-        </div>
-
-
-        <div className="action-card">
-
+        <Link href="/dashboard/buy-electricity" className="btn">
           Buy Electricity
+        </Link>
 
-        </div>
-
-
-        <div className="action-card">
-
+        <Link href="/dashboard/fund-wallet" className="btn fund">
           Fund Wallet
-
-        </div>
-
+        </Link>
 
       </div>
 
 
-      {/* TRANSACTIONS */}
-
-      <div className="transaction-section">
+      <div className="transactions">
 
         <h3>Recent Transactions</h3>
 
-
-        {transactions.map(tx => (
-
-          <div key={tx.id} className="transaction-card">
-
-            ₦{tx.amount} — {tx.date}
-
-          </div>
-
-        ))}
-
+        <p>No transactions yet</p>
 
       </div>
 
