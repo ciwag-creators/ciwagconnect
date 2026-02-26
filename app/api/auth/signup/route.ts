@@ -1,40 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server'
-import supabaseServer from '@/lib/supabase/server'
+import supabaseAdmin from '@/lib/supabase/admin'
 
 export async function POST(req: NextRequest) {
-  try {
-    const { email, password } = await req.json()
 
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password required' },
-        { status: 400 }
-      )
-    }
+try {
 
-    const { data, error } =
-      await supabaseServer.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-      })
+const { email, password } = await req.json()
 
-    if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      )
-    }
+/* CREATE USER */
+const { data, error } = await supabaseAdmin.auth.admin.createUser({
 
-    return NextResponse.json({
-      success: true,
-      user: data.user,
-    })
+email,
+password,
+email_confirm: true
 
-  } catch {
-    return NextResponse.json(
-      { error: 'Server error' },
-      { status: 500 }
-    )
-  }
+})
+
+if (error) {
+
+return NextResponse.json({ error: error.message }, { status: 400 })
+
+}
+
+/* CREATE WALLET */
+await supabaseAdmin
+.from('wallets')
+.insert({
+
+user_id: data.user.id,
+balance: 0
+
+})
+
+return NextResponse.json({ success: true })
+
+}
+
+catch {
+
+return NextResponse.json(
+{ error: "Signup failed" },
+{ status: 500 }
+)
+
+}
+
 }

@@ -1,112 +1,116 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import "./dashboard.css";
 
 export default function Dashboard() {
 
-  const balance = 12500;
+  const [balance, setBalance] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  const transactions = [
+  useEffect(() => {
 
-    {
-      id: "TX123",
-      amount: 1000,
-      date: "Today"
-    },
+    fetch("/api/wallet")
 
-    {
-      id: "TX124",
-      amount: 2000,
-      date: "Yesterday"
-    }
+      .then((res) => res.json())
 
-  ];
+      .then((data) => {
+
+        setBalance(data.balance || 0);
+
+        setLoading(false);
+
+      })
+
+      .catch(() => setLoading(false));
+
+  }, []);
+
 
   return (
 
-    <div className="dashboard-container">
+    <div className="dashboard">
 
+      {/* Sidebar */}
 
-      {/* HEADER */}
+      <div className="sidebar">
 
-      <div className="dashboard-header">
+        <h2>CIWAG VTU</h2>
 
-        <h2>Welcome, User</h2>
+        <Link href="/dashboard">Dashboard</Link>
 
-        <p>Manage your VTU services</p>
+        <Link href="/dashboard/airtime">Buy Airtime</Link>
 
-      </div>
+        <Link href="/dashboard/data">Buy Data</Link>
 
+        <Link href="/dashboard/electricity">Electricity</Link>
 
-      {/* WALLET */}
-
-      <div className="wallet-card">
-
-        <p>Wallet Balance</p>
-
-        <div className="wallet-balance">
-
-          ₦{balance.toLocaleString()}
-
-        </div>
+        <Link href="/dashboard/fund">Fund Wallet</Link>
 
       </div>
 
 
-      {/* ACTIONS */}
+      {/* Main */}
 
-      <div className="actions">
+      <div className="main">
 
-
-        <div className="action-card">
-
-          Buy Airtime
-
-        </div>
+        <h1>Dashboard</h1>
 
 
-        <div className="action-card">
+        {/* Wallet Card */}
 
-          Buy Data
+        <div className="card">
 
-        </div>
+          <h3>Wallet Balance</h3>
 
+          <p>
 
-        <div className="action-card">
+            {loading
 
-          Buy Electricity
+              ? "Loading..."
 
-        </div>
+              : "₦" + balance.toLocaleString()}
 
-
-        <div className="action-card">
-
-          Fund Wallet
+          </p>
 
         </div>
 
+
+        {/* Services */}
+
+        <div className="services">
+
+          <Link href="/dashboard/airtime" className="service">
+
+            Buy Airtime
+
+          </Link>
+
+
+          <Link href="/dashboard/data" className="service">
+
+            Buy Data
+
+          </Link>
+
+
+          <Link href="/dashboard/electricity" className="service">
+
+            Pay Electricity
+
+          </Link>
+
+
+          <Link href="/dashboard/fund" className="service">
+
+            Fund Wallet
+
+          </Link>
+
+        </div>
 
       </div>
-
-
-      {/* TRANSACTIONS */}
-
-      <div className="transaction-section">
-
-        <h3>Recent Transactions</h3>
-
-
-        {transactions.map(tx => (
-
-          <div key={tx.id} className="transaction-card">
-
-            ₦{tx.amount} — {tx.date}
-
-          </div>
-
-        ))}
-
-
-      </div>
-
 
     </div>
 

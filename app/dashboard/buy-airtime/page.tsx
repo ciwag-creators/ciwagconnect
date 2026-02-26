@@ -1,72 +1,155 @@
-'use client'
+"use client"
 
-import { useState } from 'react'
+import { useState } from "react"
+import "./buy-airtime.css"
 
 export default function BuyAirtime() {
+
+  const [network, setNetwork] = useState("MTN")
+  const [phone, setPhone] = useState("")
+  const [amount, setAmount] = useState("")
   const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState("")
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function handlePurchase() {
+
     setLoading(true)
+    setMessage("")
 
-    const form = e.target as HTMLFormElement
-    const formData = new FormData(form)
+    try {
 
-    await fetch('/api/airtime', {
-      method: 'POST',
-      body: JSON.stringify({
-        network: formData.get('network'),
-        phone: formData.get('phone'),
-        amount: Number(formData.get('amount'))
+      const res = await fetch("/api/vtu/airtime", {
+
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+
+          user_id: "test-user",
+
+          network,
+
+          phone,
+
+          amount: Number(amount),
+
+          reference: Date.now().toString(),
+
+        }),
+
       })
-    })
+
+      const data = await res.json()
+
+      if (data.success) {
+
+        setMessage("✅ Airtime purchase successful")
+
+        setPhone("")
+        setAmount("")
+
+      } else {
+
+        setMessage("❌ " + data.error)
+
+      }
+
+    } catch {
+
+      setMessage("❌ Network error")
+
+    }
 
     setLoading(false)
-    alert('Airtime request sent')
+
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="max-w-md space-y-4 bg-white p-6 rounded-xl shadow"
-    >
-      <h2 className="text-lg font-semibold">
-        Buy Airtime
-      </h2>
 
-      <select
-        name="network"
-        required
-        className="w-full border p-2 rounded"
-      >
-        <option value="">Select Network</option>
-        <option value="mtn">MTN</option>
-        <option value="airtel">Airtel</option>
-        <option value="glo">Glo</option>
-        <option value="9mobile">9mobile</option>
-      </select>
+    <main className="container">
 
-      <input
-        name="phone"
-        placeholder="Phone Number"
-        required
-        className="w-full border p-2 rounded"
-      />
+      <h1>Buy Airtime</h1>
 
-      <input
-        name="amount"
-        type="number"
-        placeholder="Amount"
-        required
-        className="w-full border p-2 rounded"
-      />
+      <div className="card">
 
-      <button
-        disabled={loading}
-        className="w-full bg-black text-white py-2 rounded"
-      >
-        {loading ? 'Processing...' : 'Buy Airtime'}
-      </button>
-    </form>
+        <label>Network</label>
+
+        <select
+          value={network}
+          onChange={(e) => setNetwork(e.target.value)}
+        >
+
+          <option value="MTN">MTN</option>
+
+          <option value="AIRTEL">Airtel</option>
+
+          <option value="GLO">Glo</option>
+
+          <option value="9MOBILE">9Mobile</option>
+
+        </select>
+
+
+        <label>Phone Number</label>
+
+        <input
+
+          type="text"
+
+          placeholder="08012345678"
+
+          value={phone}
+
+          onChange={(e) => setPhone(e.target.value)}
+
+        />
+
+
+        <label>Amount</label>
+
+        <input
+
+          type="number"
+
+          placeholder="100"
+
+          value={amount}
+
+          onChange={(e) => setAmount(e.target.value)}
+
+        />
+
+
+        <button
+
+          onClick={handlePurchase}
+
+          disabled={loading}
+
+        >
+
+          {loading ? "Processing..." : "Buy Airtime"}
+
+        </button>
+
+
+        {message && (
+
+          <p className="message">
+
+            {message}
+
+          </p>
+
+        )}
+
+      </div>
+
+    </main>
+
   )
+
 }

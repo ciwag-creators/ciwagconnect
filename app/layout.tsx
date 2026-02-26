@@ -1,19 +1,16 @@
-import './globals.css'
-import type { Metadata } from 'next'
-
-export const metadata: Metadata = {
-  title: 'VTU Platform',
-  description: 'Fast & reliable VTU services'
+export const metadata = {
+  title: "CIWAG VTU Platform",
+  description: "Buy Airtime, Data, Electricity",
 }
 
 export default function RootLayout({
-  children
+  children,
 }: {
   children: React.ReactNode
 }) {
   return (
     <html lang="en">
-      <body>
+      <body suppressHydrationWarning={true}>
         {children}
       </body>
     </html>
