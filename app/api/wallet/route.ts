@@ -1,8 +1,8 @@
+import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export async function GET() {
-
   const cookieStore = await cookies();
 
   const supabase = createServerClient(
@@ -19,24 +19,21 @@ export async function GET() {
     }
   );
 
-  // get logged in user
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return Response.json({ balance: 0 });
+    return NextResponse.json({ balance: 0 });
   }
 
-  // get wallet balance
-  const { data } = await supabase
+  const { data: wallet } = await supabase
     .from("wallets")
     .select("balance")
     .eq("user_id", user.id)
     .single();
 
-  return Response.json({
-    balance: data?.balance ?? 0,
+  return NextResponse.json({
+    balance: wallet?.balance || 0,
   });
-
 }

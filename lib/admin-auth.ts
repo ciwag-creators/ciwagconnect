@@ -20,7 +20,7 @@ export async function requireAdmin() {
     {
       global: {
         headers: {
-          Authorization: Bearer ${token},
+          Authorization: `Bearer ${token}`,
         },
       },
     }

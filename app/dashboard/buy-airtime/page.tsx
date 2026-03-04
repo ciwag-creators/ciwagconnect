@@ -1,155 +1,114 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import "./buy-airtime.css"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function BuyAirtime() {
+export default function BuyAirtimePage() {
+  const router = useRouter();
 
-  const [network, setNetwork] = useState("MTN")
-  const [phone, setPhone] = useState("")
-  const [amount, setAmount] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState("")
+  const [phone, setPhone] = useState("");
+  const [network, setNetwork] = useState("MTN");
+  const [amount, setAmount] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  async function handlePurchase() {
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
 
-    setLoading(true)
-    setMessage("")
+    setLoading(true);
+    setMessage("");
 
     try {
-
-      const res = await fetch("/api/vtu/airtime", {
-
+      const res = await fetch("/api/airtime", {
         method: "POST",
-
         headers: {
           "Content-Type": "application/json",
         },
-
         body: JSON.stringify({
-
-          user_id: "test-user",
-
-          network,
-
           phone,
-
+          network,
           amount: Number(amount),
-
-          reference: Date.now().toString(),
-
         }),
+      });
 
-      })
+      const data = await res.json();
 
-      const data = await res.json()
-
-      if (data.success) {
-
-        setMessage("✅ Airtime purchase successful")
-
-        setPhone("")
-        setAmount("")
-
-      } else {
-
-        setMessage("❌ " + data.error)
-
+      if (!res.ok) {
+        setMessage(data.error || "Something went wrong");
+        setLoading(false);
+        return;
       }
 
-    } catch {
+      setMessage("Airtime purchase successful ✅");
 
-      setMessage("❌ Network error")
+      // Small delay before redirect
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 1000);
 
+    } catch (error) {
+      setMessage("Network error");
+      setLoading(false);
     }
-
-    setLoading(false)
-
   }
 
   return (
-
-    <main className="container">
-
+    <div style={{ padding: "40px" }}>
       <h1>Buy Airtime</h1>
 
-      <div className="card">
+      <form onSubmit={handleSubmit} style={{ maxWidth: "400px" }}>
+        <input
+          type="text"
+          placeholder="Phone Number"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          required
+        />
 
-        <label>Network</label>
+        <br /><br />
 
         <select
           value={network}
           onChange={(e) => setNetwork(e.target.value)}
         >
-
           <option value="MTN">MTN</option>
-
-          <option value="AIRTEL">Airtel</option>
-
-          <option value="GLO">Glo</option>
-
-          <option value="9MOBILE">9Mobile</option>
-
+          <option value="Airtel">Airtel</option>
+          <option value="Glo">Glo</option>
+          <option value="9mobile">9mobile</option>
         </select>
 
-
-        <label>Phone Number</label>
-
-        <input
-
-          type="text"
-
-          placeholder="08012345678"
-
-          value={phone}
-
-          onChange={(e) => setPhone(e.target.value)}
-
-        />
-
-
-        <label>Amount</label>
+        <br /><br />
 
         <input
-
           type="number"
-
-          placeholder="100"
-
+          placeholder="Amount"
           value={amount}
-
           onChange={(e) => setAmount(e.target.value)}
-
+          required
         />
 
+        <br /><br />
 
         <button
-
-          onClick={handlePurchase}
-
+          type="submit"
           disabled={loading}
-
+          style={{
+            padding: "10px 20px",
+            background: loading ? "#999" : "#000",
+            color: "#fff",
+            border: "none",
+            cursor: loading ? "not-allowed" : "pointer",
+          }}
         >
-
           {loading ? "Processing..." : "Buy Airtime"}
-
         </button>
+      </form>
 
-
-        {message && (
-
-          <p className="message">
-
-            {message}
-
-          </p>
-
-        )}
-
-      </div>
-
-    </main>
-
-  )
-
+      {message && (
+        <p style={{ marginTop: "20px" }}>
+          {message}
+        </p>
+      )}
+    </div>
+  );
 }
