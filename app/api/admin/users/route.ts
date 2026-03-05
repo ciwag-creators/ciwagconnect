@@ -9,10 +9,9 @@ process.env.SUPABASE_SERVICE_ROLE_KEY!
 export async function GET(){
 
 const { data } = await supabase
-.from("transactions")
-.select("*")
-.order("created_at",{ascending:false});
+.from("wallets")
+.select("user_id,balance");
 
-return NextResponse.json({transactions:data});
+return NextResponse.json({users:data});
 
 }

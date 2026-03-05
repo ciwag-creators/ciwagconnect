@@ -1,97 +1,125 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function Dashboard() {
-  const [balance, setBalance] = useState(0);
-  const [transactions, setTransactions] = useState<any[]>([]);
+
+  const [wallet, setWallet] = useState(0);
+  const [transactions, setTransactions] = useState([]);
 
   useEffect(() => {
-    fetch("/api/wallet")
-      .then(res => res.json())
-      .then(data => setBalance(data.balance || 0));
 
-    fetch("/api/transactions")
-      .then(res => res.json())
-      .then(data => setTransactions(data.transactions || []));
+    async function loadData() {
+
+      const walletRes = await fetch("/api/fund-wallet");
+      const walletData = await walletRes.json();
+      setWallet(walletData.balance || 0);
+
+      const txRes = await fetch("/api/transactions");
+      const txData = await txRes.json();
+      setTransactions(txData.transactions || []);
+    }
+
+    loadData();
+
   }, []);
 
-  const greeting =
-    new Date().getHours() < 12
-      ? "Good Morning"
-      : new Date().getHours() < 18
-      ? "Good Afternoon"
-      : "Good Evening";
-
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-4xl mx-auto">
 
-        <h1 className="text-2xl font-bold mb-6">
-          {greeting} 👋
-        </h1>
+    <div className="p-6 max-w-5xl mx-auto">
 
-        {/* Wallet Card */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-8 rounded-3xl shadow-xl mb-8">
-          <p className="text-sm opacity-80">Available Balance</p>
-          <h2 className="text-4xl font-bold mt-2">
-            ₦{balance.toLocaleString()}
-          </h2>
-        </div>
+      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
-        {/* Actions */}
-        <div className="grid grid-cols-2 gap-6 mb-10">
-          <Link href="/dashboard/fund-wallet">
-            <div className="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition cursor-pointer text-center">
-              <p className="text-lg font-semibold">Fund Wallet</p>
-            </div>
-          </Link>
+      {/* Wallet Card */}
 
-          <Link href="/dashboard/buy-airtime">
-            <div className="bg-white p-6 rounded-2xl shadow hover:shadow-lg transition cursor-pointer text-center">
-              <p className="text-lg font-semibold">Buy Airtime</p>
-            </div>
-          </Link>
-        </div>
+      <div className="bg-blue-600 text-white p-6 rounded-xl mb-6">
+        <p className="text-sm">Wallet Balance</p>
+        <h2 className="text-3xl font-bold">₦{wallet}</h2>
 
-        {/* Transactions */}
-        <div className="bg-white p-6 rounded-2xl shadow">
-          <h2 className="text-xl font-semibold mb-4">
-            Recent Transactions
-          </h2>
+        <Link href="/dashboard/fund">
+          <button className="mt-4 bg-white text-blue-600 px-4 py-2 rounded">
+            Fund Wallet
+          </button>
+        </Link>
+      </div>
 
-          {transactions.length === 0 ? (
-            <p className="text-gray-500">No transactions yet.</p>
-          ) : (
-            transactions.map((tx) => (
-              <div
-                key={tx.id}
-                className="flex justify-between items-center border-b py-4"
-              >
-                <div>
-                  <p className="capitalize font-medium">
-                    {tx.type}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {new Date(tx.created_at).toLocaleString()}
-                  </p>
-                </div>
 
-                <p
-                  className={
-                    tx.type === "funding"
-                      ? "text-green-600 font-semibold"
-                      : "text-red-600 font-semibold"
-                  }
-                >
-                  ₦{tx.amount.toLocaleString()}
+      {/* Quick Actions */}
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+
+        <Link href="/dashboard/buy-airtime">
+          <div className="bg-white shadow rounded-lg p-4 text-center hover:bg-gray-50">
+            📞
+            <p className="font-semibold">Buy Airtime</p>
+          </div>
+        </Link>
+
+        <Link href="/dashboard/buy-data">
+          <div className="bg-white shadow rounded-lg p-4 text-center hover:bg-gray-50">
+            🌐
+            <p className="font-semibold">Buy Data</p>
+          </div>
+        </Link>
+
+        <Link href="/dashboard/electricity">
+          <div className="bg-white shadow rounded-lg p-4 text-center hover:bg-gray-50">
+            ⚡
+            <p className="font-semibold">Electricity</p>
+          </div>
+        </Link>
+
+        <Link href="/dashboard/cable">
+          <div className="bg-white shadow rounded-lg p-4 text-center hover:bg-gray-50">
+            📺
+            <p className="font-semibold">Cable TV</p>
+          </div>
+        </Link>
+
+      </div>
+
+
+      {/* Transactions */}
+
+      <div className="bg-white shadow rounded-lg p-6">
+
+        <h2 className="font-bold mb-4">Recent Transactions</h2>
+
+        {transactions.length === 0 ? (
+
+          <p className="text-gray-500">No transactions yet</p>
+
+        ) : (
+
+          transactions.map((tx: any) => (
+
+            <div
+              key={tx.id}
+              className="flex justify-between border-b py-3"
+            >
+
+              <div>
+                <p className="font-medium capitalize">{tx.type}</p>
+                <p className="text-xs text-gray-500">
+                  {new Date(tx.created_at).toLocaleString()}
                 </p>
               </div>
-            ))
-          )}
-        </div>
+
+              <p className="font-bold">
+                ₦{tx.amount}
+              </p>
+
+            </div>
+
+          ))
+
+        )}
+
       </div>
+
     </div>
+
   );
+
 }

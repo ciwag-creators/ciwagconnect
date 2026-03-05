@@ -1,77 +1,61 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-export default function AdminPage() {
+export default function AdminDashboard() {
 
-  const [email, setEmail] = useState("");
-  const [amount, setAmount] = useState("");
+const [transactions,setTransactions] = useState([]);
+const [users,setUsers] = useState([]);
 
-  const fundWallet = async () => {
+useEffect(()=>{
 
-    const res = await fetch(
-      "/api/admin/fund-wallet",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          amount,
-        }),
-      }
-    );
+fetch("/api/admin/transactions")
+.then(res=>res.json())
+.then(data=>setTransactions(data.transactions || []));
 
-    const data = await res.json();
+fetch("/api/admin/users")
+.then(res=>res.json())
+.then(data=>setUsers(data.users || []));
 
-    if (data.success) {
+},[]);
 
-      alert("Wallet funded");
 
-    } else {
+return (
 
-      alert(data.error);
+<div className="p-6">
 
-    }
+<h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
 
-  };
 
-  return (
+<h2 className="font-bold mb-2">Users</h2>
 
-    <div style={{
-      padding: "40px"
-    }}>
+{users.map((u:any)=>(
+<div key={u.id} className="border p-2 mb-2 flex justify-between">
 
-      <h1>Admin Fund Wallet</h1>
+<span>{u.email}</span>
 
-      <input
-        placeholder="User email"
-        value={email}
-        onChange={(e)=>
-          setEmail(e.target.value)
-        }
-      />
+<span>₦{u.balance}</span>
 
-      <br/><br/>
+</div>
+))}
 
-      <input
-        placeholder="Amount"
-        value={amount}
-        onChange={(e)=>
-          setAmount(e.target.value)
-        }
-      />
 
-      <br/><br/>
+<h2 className="font-bold mt-6 mb-2">Transactions</h2>
 
-      <button
-        onClick={fundWallet}
-      >
-        Fund Wallet
-      </button>
+{transactions.map((tx:any)=>(
+<div key={tx.id} className="border p-2 mb-2 flex justify-between">
 
-    </div>
+<span>{tx.type}</span>
 
-  );
+<span>₦{tx.amount}</span>
+
+<span>{tx.status}</span>
+
+</div>
+))}
+
+</div>
+
+)
+
 }

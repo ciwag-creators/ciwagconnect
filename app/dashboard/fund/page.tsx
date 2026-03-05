@@ -15,7 +15,7 @@ export default function FundWalletPage() {
     setLoading(true);
     setMessage("");
 
-    const res = await fetch("/api/fund-wallet", {
+    const res = await fetch("/api/wallet", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
