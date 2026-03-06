@@ -4,59 +4,91 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function FundWalletPage() {
-  const router = useRouter();
-
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
+  const router = useRouter();
+
+  const handleFund = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setMessage("");
 
-    const res = await fetch("/api/wallet", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ amount: Number(amount) }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      setMessage(data.error);
-      setLoading(false);
+    if (!amount) {
+      setMessage("Enter amount");
       return;
     }
 
-    setTimeout(() => {
-      router.push("/dashboard");
-    }, 1000);
-  }
+    setLoading(true);
+    setMessage("");
+
+    try {
+      const res = await fetch("/api/wallet", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: Number(amount),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setMessage("Wallet funded successfully ✅");
+
+        setTimeout(() => {
+          router.push("/dashboard");
+          router.refresh();
+        }, 1200);
+      } else {
+        setMessage(data.error || "Funding failed");
+      }
+    } catch (error) {
+      setMessage("Something went wrong");
+    }
+
+    setLoading(false);
+  };
 
   return (
-    <div style={{ padding: "40px" }}>
-      <h1>Fund Wallet</h1>
+    <div style={{ maxWidth: "400px", margin: "40px auto" }}>
+      <h1 style={{ fontSize: "24px", marginBottom: "20px" }}>
+        Fund Wallet
+      </h1>
 
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleFund}>
         <input
           type="number"
           placeholder="Enter amount"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          required
+          style={{
+            width: "100%",
+            padding: "10px",
+            marginBottom: "10px",
+          }}
         />
 
-        <br /><br />
-
-        <button disabled={loading}>
+        <button
+          type="submit"
+          disabled={loading}
+          style={{
+            width: "100%",
+            padding: "10px",
+            background: "black",
+            color: "white",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
           {loading ? "Processing..." : "Fund Wallet"}
         </button>
       </form>
 
-      {message && <p>{message}</p>}
+      {message && (
+        <p style={{ marginTop: "15px", color: "green" }}>{message}</p>
+      )}
     </div>
   );
 }

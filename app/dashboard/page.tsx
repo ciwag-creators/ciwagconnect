@@ -12,7 +12,7 @@ export default function Dashboard() {
 
     async function loadData() {
 
-      const walletRes = await fetch("/api/fund-wallet");
+      const walletRes = await fetch("/api/wallet");
       const walletData = await walletRes.json();
       setWallet(walletData.balance || 0);
 

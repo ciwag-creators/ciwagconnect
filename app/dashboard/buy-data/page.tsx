@@ -1,44 +1,79 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function BuyData() {
+export default function BuyDataPage() {
+
+  const router = useRouter();
 
   const [phone, setPhone] = useState("");
   const [network, setNetwork] = useState("MTN");
-  const [plan, setPlan] = useState("");
+  const [plan, setPlan] = useState("500MB");
+  const [amount, setAmount] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  async function buyData(e:any) {
+  async function handleBuy(e: React.FormEvent) {
+
     e.preventDefault();
+    setLoading(true);
+    setMessage("");
 
-    setMessage("Processing...");
-
-    const res = await fetch("/api/buy-data", {
+    const res = await fetch("/api/data", {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         phone,
         network,
-        plan
-      })
+        plan,
+        amount: Number(amount),
+      }),
     });
 
     const data = await res.json();
 
-    setMessage(data.message);
+    setLoading(false);
+
+    if (res.ok) {
+
+      setMessage("✅ Data purchase successful");
+
+      setPhone("");
+      setAmount("");
+
+      // Return to dashboard after 2 seconds
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 2000);
+
+    } else {
+      setMessage("❌ " + data.error);
+    }
   }
 
   return (
 
-    <div className="max-w-md mx-auto p-6">
+    <div style={{ padding: "40px", maxWidth: "400px" }}>
 
-      <h1 className="text-xl font-bold mb-4">Buy Data</h1>
+      <h2>Buy Data</h2>
 
-      <form onSubmit={buyData} className="space-y-4">
+      <form onSubmit={handleBuy}>
+
+        <input
+          placeholder="Phone Number"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          required
+        />
+
+        <br /><br />
 
         <select
-          className="w-full border p-2"
-          onChange={(e)=>setNetwork(e.target.value)}
+          value={network}
+          onChange={(e) => setNetwork(e.target.value)}
         >
           <option>MTN</option>
           <option>Airtel</option>
@@ -46,38 +81,43 @@ export default function BuyData() {
           <option>9mobile</option>
         </select>
 
+        <br /><br />
+
         <select
-          className="w-full border p-2"
-          onChange={(e)=>setPlan(e.target.value)}
+          value={plan}
+          onChange={(e) => setPlan(e.target.value)}
         >
-          <option value="">Select Plan</option>
           <option value="500MB">500MB</option>
           <option value="1GB">1GB</option>
           <option value="2GB">2GB</option>
           <option value="5GB">5GB</option>
         </select>
 
+        <br /><br />
+
         <input
-          type="text"
-          placeholder="Phone Number"
-          className="w-full border p-2"
-          onChange={(e)=>setPhone(e.target.value)}
+          type="number"
+          placeholder="Amount"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          required
         />
 
-        <button
-          className="bg-blue-600 text-white w-full p-2 rounded"
-        >
-          Buy Data
+        <br /><br />
+
+        <button type="submit" disabled={loading}>
+
+          {loading ? "Processing..." : "Buy Data"}
+
         </button>
 
       </form>
 
-      {message && (
-        <p className="mt-4 text-center">{message}</p>
-      )}
+      <br />
+
+      <p>{message}</p>
 
     </div>
 
   );
-
 }
