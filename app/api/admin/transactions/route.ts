@@ -1,18 +1,31 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-process.env.NEXT_PUBLIC_SUPABASE_URL!,
-process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { NextResponse } from "next/server"
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
 
 export async function GET(){
 
-const { data } = await supabase
-.from("transactions")
-.select("*")
-.order("created_at",{ascending:false});
+  const cookieStore = cookies()
 
-return NextResponse.json({transactions:data});
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies:{
+        async get(name:string){
+          return (await cookieStore).get(name)?.value
+        },
+        set(){},
+        remove(){}
+      }
+    }
+  )
+
+  const { data } = await supabase
+  .from("transactions")
+  .select("*")
+  .order("created_at",{ ascending:false })
+  .limit(50)
+
+  return NextResponse.json(data)
 
 }

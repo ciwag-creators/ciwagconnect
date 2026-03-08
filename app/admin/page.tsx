@@ -1,61 +1,51 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
 
-export default function AdminDashboard() {
+export default function AdminDashboard(){
 
-const [transactions,setTransactions] = useState([]);
-const [users,setUsers] = useState([]);
+  const [stats,setStats] = useState({
+    users:0,
+    transactions:0,
+    profit:0
+  })
 
-useEffect(()=>{
+  useEffect(()=>{
 
-fetch("/api/admin/transactions")
-.then(res=>res.json())
-.then(data=>setTransactions(data.transactions || []));
+    fetch("/api/admin/stats")
+    .then(res=>res.json())
+    .then(data=>{
+      setStats(data)
+    })
 
-fetch("/api/admin/users")
-.then(res=>res.json())
-.then(data=>setUsers(data.users || []));
+  },[])
 
-},[]);
+  return(
 
+    <div style={{padding:"40px"}}>
 
-return (
+      <h1>Admin Dashboard</h1>
 
-<div className="p-6">
+      <div style={{display:"flex",gap:"20px",marginTop:"20px"}}>
 
-<h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
+        <div style={{border:"1px solid #ddd",padding:"20px"}}>
+          <h3>Total Users</h3>
+          <p>{stats.users}</p>
+        </div>
 
+        <div style={{border:"1px solid #ddd",padding:"20px"}}>
+          <h3>Total Transactions</h3>
+          <p>{stats.transactions}</p>
+        </div>
 
-<h2 className="font-bold mb-2">Users</h2>
+        <div style={{border:"1px solid #ddd",padding:"20px"}}>
+          <h3>Total Profit</h3>
+          <p>₦{stats.profit}</p>
+        </div>
 
-{users.map((u:any)=>(
-<div key={u.id} className="border p-2 mb-2 flex justify-between">
+      </div>
 
-<span>{u.email}</span>
+    </div>
 
-<span>₦{u.balance}</span>
-
-</div>
-))}
-
-
-<h2 className="font-bold mt-6 mb-2">Transactions</h2>
-
-{transactions.map((tx:any)=>(
-<div key={tx.id} className="border p-2 mb-2 flex justify-between">
-
-<span>{tx.type}</span>
-
-<span>₦{tx.amount}</span>
-
-<span>{tx.status}</span>
-
-</div>
-))}
-
-</div>
-
-)
-
+  )
 }

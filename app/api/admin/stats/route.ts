@@ -1,109 +1,63 @@
-import supabaseAdmin from '@/lib/supabase/admin'
-import { requireAdmin } from '@/lib/admin-auth'
+import { NextResponse } from "next/server"
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
 
-/* ---------------- HELPERS ---------------- */
+export async function GET(){
 
-function getDateRange(start: Date, end: Date) {
-  const dates: string[] = []
-  const current = new Date(start)
+  const cookieStore = cookies()
 
-  while (current <= end) {
-    dates.push(current.toISOString().split('T')[0])
-    current.setDate(current.getDate() + 1)
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies:{
+        async get(name:string){
+          return (await cookieStore).get(name)?.value
+        },
+        set(){},
+        remove(){}
+      }
+    }
+  )
+
+  const { data:{ user } } = await supabase.auth.getUser()
+
+  if(!user){
+    return NextResponse.json({ error:"Unauthorized" })
   }
 
-  return dates
-}
+  const { data: profile } = await supabase
+  .from("profiles")
+  .select("*")
+  .eq("user_id",user.id)
+  .single()
 
-function normalizeDailyData(
-  raw: { date: string; total: number }[],
-  start: Date,
-  end: Date
-) {
-  const map: Record<string, number> = {}
+  if(!profile?.is_admin){
+    return NextResponse.json({ error:"Admin only" })
+  }
 
-  raw.forEach(item => {
-    map[item.date] = Number(item.total)
+  const { count: users } = await supabase
+  .from("profiles")
+  .select("*",{ count:"exact", head:true })
+
+  const { count: transactions } = await supabase
+  .from("transactions")
+  .select("*",{ count:"exact", head:true })
+
+  const { data: profits } = await supabase
+  .from("transactions")
+  .select("profit")
+
+  let totalProfit = 0
+
+  profits?.forEach(t=>{
+    totalProfit += Number(t.profit)
   })
 
-  return getDateRange(start, end).map(date => ({
-    date,
-    total: map[date] || 0
-  }))
-}
+  return NextResponse.json({
+    users,
+    transactions,
+    profit:totalProfit
+  })
 
-/* ---------------- GET ADMIN STATS ---------------- */
-
-export async function GET() {
-  try {
-    // 🔐 Ensure admin
-    await requireAdmin()
-
-    // last 7 days
-    const endDate = new Date()
-    const startDate = new Date()
-    startDate.setDate(endDate.getDate() - 6)
-
-    const start = startDate.toISOString()
-    const end = endDate.toISOString()
-
-    /* ---------------- REVENUE ---------------- */
-    const { data: revenueRaw, error: revenueError } =
-      await supabaseAdmin.rpc('daily_revenue', {
-        start_date: start,
-        end_date: end
-      })
-
-    if (revenueError) throw revenueError
-
-    /* ---------------- TRANSACTIONS ---------------- */
-    const { data: transactionRaw, error: transactionError } =
-      await supabaseAdmin.rpc('daily_transactions', {
-        start_date: start,
-        end_date: end
-      })
-
-    if (transactionError) throw transactionError
-
-    /* ---------------- PROFIT ---------------- */
-    const { data: profitRaw, error: profitError } =
-      await supabaseAdmin.rpc('daily_profit', {
-        start_date: start,
-        end_date: end
-      })
-
-    if (profitError) throw profitError
-
-    /* ---------------- NORMALIZE ---------------- */
-    const daily_revenue = normalizeDailyData(
-      revenueRaw || [],
-      startDate,
-      endDate
-    )
-
-    const daily_transactions = normalizeDailyData(
-      transactionRaw || [],
-      startDate,
-      endDate
-    )
-
-    const daily_profit = normalizeDailyData(
-      profitRaw || [],
-      startDate,
-      endDate
-    )
-
-    return Response.json({
-      daily_revenue,
-      daily_transactions,
-      daily_profit
-    })
-  } catch (error: any) {
-    console.error('Admin stats error:', error)
-
-    return Response.json(
-      { error: 'Failed to load admin stats' },
-      { status: 500 }
-    )
-  }
 }

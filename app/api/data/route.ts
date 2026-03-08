@@ -4,19 +4,17 @@ import { cookies } from "next/headers"
 
 export async function POST(req: Request) {
 
-  const { phone, network, plan } = await req.json()
+  const { network, phone, amount } = await req.json()
 
-  const amount = 1000
-
-  const cookieStore = await cookies()
+  const cookieStore = cookies()
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies:{
-        get(name:string){
-          return cookieStore.get(name)?.value
+        async get(name:string){
+          return (await cookieStore).get(name)?.value
         },
         set(){},
         remove(){}
@@ -24,83 +22,92 @@ export async function POST(req: Request) {
     }
   )
 
-  const { data:{user} } = await supabase.auth.getUser()
+  const { data:{ user } } = await supabase.auth.getUser()
 
   if(!user){
-    return NextResponse.json({error:"Unauthorized"})
+    return NextResponse.json({ error:"Unauthorized" },{ status:401 })
   }
 
-  const { data:wallet } = await supabase
+  const { data: wallet } = await supabase
   .from("wallets")
-  .select("balance")
+  .select("*")
   .eq("user_id",user.id)
   .single()
 
-  const balance = wallet?.balance || 0
-
-  const { data:agent } = await supabase
-  .from("agents")
-  .select("level")
-  .eq("user_id",user.id)
+  const { data: pricing } = await supabase
+  .from("pricing")
+  .select("*")
+  .eq("service","airtime")
   .single()
 
-  const level = agent?.level || "user"
+  let finalAmount = Number(amount)
 
-  let finalPrice = amount
-
-  if(level === "agent") finalPrice = amount * 1.05
-  if(level === "super_agent") finalPrice = amount * 1.02
-
-  if(balance < finalPrice){
-    return NextResponse.json({error:"Insufficient balance"})
+  if(pricing?.type === "percentage"){
+    finalAmount = Number(amount) + (Number(amount) * pricing.margin)/100
   }
 
-  const newBalance = balance - finalPrice
+  if(pricing?.type === "flat"){
+    finalAmount = Number(amount) + pricing.margin
+  }
+
+  if(wallet.balance < finalAmount){
+    return NextResponse.json({ error:"Insufficient balance" })
+  }
+
+  const newBalance = wallet.balance - finalAmount
 
   await supabase
   .from("wallets")
-  .update({balance:newBalance})
+  .update({ balance:newBalance })
   .eq("user_id",user.id)
 
-  const profit = finalPrice - amount
+  const reference = "TXN-" + Date.now()
 
   await supabase.from("transactions").insert({
     user_id:user.id,
-    type:"data",
-    network,
-    phone,
-    amount:finalPrice,
-    profit,
-    status:"success"
+    type:"airtime",
+    amount:Number(amount),
+    charged:finalAmount,
+    profit:finalAmount - Number(amount),
+    reference
   })
 
-  /* REFERRAL */
+  /* REFERRAL COMMISSION */
 
-  const { data:referral } = await supabase
+  const { data: referral } = await supabase
   .from("referrals")
-  .select("referrer")
-  .eq("referred_user",user.id)
+  .select("*")
+  .eq("referred_id", user.id)
   .single()
 
   if(referral){
 
-    const { data:agentWallet } = await supabase
-    .from("agents")
-    .select("commission_balance")
-    .eq("user_id",referral.referrer)
+    const commission = finalAmount * 0.02
+
+    const { data: refWallet } = await supabase
+    .from("wallets")
+    .select("*")
+    .eq("user_id", referral.referrer_id)
     .single()
 
-    const newCommission = (agentWallet?.commission_balance || 0) + 50
+    await supabase
+    .from("wallets")
+    .update({
+      balance: refWallet.balance + commission
+    })
+    .eq("user_id", referral.referrer_id)
 
     await supabase
-    .from("agents")
-    .update({commission_balance:newCommission})
-    .eq("user_id",referral.referrer)
-
+    .from("referrals")
+    .update({
+      commission: referral.commission + commission
+    })
+    .eq("id", referral.id)
   }
 
   return NextResponse.json({
-    success:true
+    success:true,
+    reference
   })
 
 }

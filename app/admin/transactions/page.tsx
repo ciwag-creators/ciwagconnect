@@ -1,25 +1,54 @@
-export const dynamic = "force-dynamic";
+"use client"
 
-async function getTransactions() {
-  const res = await fetch(
- `${process.env.NEXT_PUBLIC_BASE_URL}/api/admin/transactions`,
-  );
+import { useEffect,useState } from "react"
 
-  if (!res.ok) {
-    return [];
-  }
+export default function Transactions(){
 
-  const json = await res.json();
-  return json.data ?? [];
-}
+  const [transactions,setTransactions] = useState([])
 
-export default async function TransactionsPage() {
-  const transactions = await getTransactions();
+  useEffect(()=>{
 
-  return (
-    <div>
-      <h1>Transactions</h1>
-      <pre>{JSON.stringify(transactions, null, 2)}</pre>
+    fetch("/api/admin/transactions")
+    .then(res=>res.json())
+    .then(data=>{
+      setTransactions(data)
+    })
+
+  },[])
+
+  return(
+
+    <div style={{padding:"40px"}}>
+
+      <h2>All Transactions</h2>
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Profit</th>
+            <th>Reference</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+        {transactions.map((t:any)=>(
+          <tr key={t.id}>
+            <td>{t.type}</td>
+            <td>{t.amount}</td>
+            <td>{t.profit}</td>
+            <td>{t.reference}</td>
+          </tr>
+        ))}
+
+        </tbody>
+
+      </table>
+
     </div>
-  );
+
+  )
 }
