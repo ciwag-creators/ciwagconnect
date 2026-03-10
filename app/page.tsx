@@ -1,47 +1,83 @@
 import Link from "next/link";
 
 export default function Home() {
+
   return (
 
     <div>
 
+      {/* HEADER */}
+
       <div className="header">
-        <h1>CIWAG VTU Platform</h1>
-        <p>Buy Airtime, Data and Electricity</p>
+
+        <h1>CIWAG VTU</h1>
+
+        <p>
+          Fast, Secure and Affordable Airtime, Data, Electricity and Cable
+          Subscription Services
+        </p>
+
       </div>
+
+
+      {/* SERVICES */}
 
       <div className="container">
 
+        <h2 className="section-title">Our Services</h2>
+
         <div className="grid">
 
-          <div className="card center">
+          {/* AIRTIME */}
 
-            <h2 className="title">Dashboard</h2>
+          <Link href="/dashboard/buy-airtime" className="card">
 
-            <Link href="/dashboard">
+            <h3>📞 Airtime</h3>
 
-              <button className="button">
-                Enter Dashboard
-              </button>
+            <p>
+              Instantly recharge airtime for MTN, Airtel, Glo and 9mobile.
+            </p>
 
-            </Link>
-
-          </div>
+          </Link>
 
 
-          <div className="card center">
+          {/* DATA */}
 
-            <h2 className="title">Admin</h2>
+          <Link href="/dashboard/buy-data" className="card">
 
-            <Link href="/admin">
+            <h3>📶 Data</h3>
 
-              <button className="button">
-                Admin Panel
-              </button>
+            <p>
+              Buy affordable internet data bundles for all networks.
+            </p>
 
-            </Link>
+          </Link>
 
-          </div>
+
+          {/* ELECTRICITY */}
+
+          <Link href="/dashboard/electricity" className="card">
+
+            <h3>⚡ Electricity</h3>
+
+            <p>
+              Pay electricity bills for all Nigerian distribution companies.
+            </p>
+
+          </Link>
+
+
+          {/* CABLE */}
+
+          <Link href="/dashboard/cable" className="card">
+
+            <h3>📺 Cable TV</h3>
+
+            <p>
+              Subscribe to DSTV, GOTV and Startimes easily.
+            </p>
+
+          </Link>
 
         </div>
 
@@ -49,5 +85,6 @@ export default function Home() {
 
     </div>
 
-  );
+  )
+
 }

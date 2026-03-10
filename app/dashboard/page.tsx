@@ -1,125 +1,120 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
+import Link from "next/link"
 
-export default function Dashboard() {
+export default function Dashboard(){
 
-  const [wallet, setWallet] = useState(0);
-  const [transactions, setTransactions] = useState([]);
+const [balance,setBalance] = useState(0)
 
-  useEffect(() => {
+useEffect(()=>{
 
-    async function loadData() {
+async function loadWallet(){
 
-      const walletRes = await fetch("/api/wallet");
-      const walletData = await walletRes.json();
-      setWallet(walletData.balance || 0);
+const res = await fetch("/api/wallet")
+const data = await res.json()
 
-      const txRes = await fetch("/api/transactions");
-      const txData = await txRes.json();
-      setTransactions(txData.transactions || []);
-    }
+setBalance(data.balance)
 
-    loadData();
+}
 
-  }, []);
+loadWallet()
 
-  return (
+},[])
 
-    <div className="p-6 max-w-5xl mx-auto">
+return(
 
-      <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+<div className="dashboard">
 
-      {/* Wallet Card */}
-
-      <div className="bg-blue-600 text-white p-6 rounded-xl mb-6">
-        <p className="text-sm">Wallet Balance</p>
-        <h2 className="text-3xl font-bold">₦{wallet}</h2>
-
-        <Link href="/dashboard/fund">
-          <button className="mt-4 bg-white text-blue-600 px-4 py-2 rounded">
-            Fund Wallet
-          </button>
-        </Link>
-      </div>
+<h1 className="dashboard-title">
+Dashboard
+</h1>
 
 
-      {/* Quick Actions */}
+{/* WALLET */}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+<div className="wallet-card">
 
-        <Link href="/dashboard/buy-airtime">
-          <div className="bg-white shadow rounded-lg p-4 text-center hover:bg-gray-50">
-            📞
-            <p className="font-semibold">Buy Airtime</p>
-          </div>
-        </Link>
+<h3>Wallet Balance</h3>
 
-        <Link href="/dashboard/buy-data">
-          <div className="bg-white shadow rounded-lg p-4 text-center hover:bg-gray-50">
-            🌐
-            <p className="font-semibold">Buy Data</p>
-          </div>
-        </Link>
+<h1>₦{balance}</h1>
 
-        <Link href="/dashboard/electricity">
-          <div className="bg-white shadow rounded-lg p-4 text-center hover:bg-gray-50">
-            ⚡
-            <p className="font-semibold">Electricity</p>
-          </div>
-        </Link>
+<Link href="/fund-wallet">
+<button className="button">
+Fund Wallet
+</button>
+</Link>
 
-        <Link href="/dashboard/cable">
-          <div className="bg-white shadow rounded-lg p-4 text-center hover:bg-gray-50">
-            📺
-            <p className="font-semibold">Cable TV</p>
-          </div>
-        </Link>
-
-      </div>
+</div>
 
 
-      {/* Transactions */}
+{/* SERVICES */}
 
-      <div className="bg-white shadow rounded-lg p-6">
+<div className="services-grid">
 
-        <h2 className="font-bold mb-4">Recent Transactions</h2>
+<Link href="/buy-airtime" className="service-card">
+<div style={{fontSize:"30px"}}>📞</div>
+<h3>Airtime</h3>
+</Link>
 
-        {transactions.length === 0 ? (
+<Link href="/buy-data" className="service-card">
+<div style={{fontSize:"30px"}}>📶</div>
+<h3>Data</h3>
+</Link>
 
-          <p className="text-gray-500">No transactions yet</p>
+<Link href="/electricity" className="service-card">
+<div style={{fontSize:"30px"}}>⚡️</div>
+<h3>Electricity</h3>
+</Link>
 
-        ) : (
+<Link href="/cable" className="service-card">
+<div style={{fontSize:"30px"}}>📺</div>
+<h3>Cable</h3>
+</Link>
 
-          transactions.map((tx: any) => (
+</div>
 
-            <div
-              key={tx.id}
-              className="flex justify-between border-b py-3"
-            >
 
-              <div>
-                <p className="font-medium capitalize">{tx.type}</p>
-                <p className="text-xs text-gray-500">
-                  {new Date(tx.created_at).toLocaleString()}
-                </p>
-              </div>
+{/* TRANSACTIONS */}
 
-              <p className="font-bold">
-                ₦{tx.amount}
-              </p>
+<h2 style={{marginTop:"40px"}}>Recent Transactions</h2>
 
-            </div>
+<table className="transaction-table">
 
-          ))
+<thead>
+<tr>
+<th>Service</th>
+<th>Amount</th>
+<th>Status</th>
+</tr>
+</thead>
 
-        )}
+<tbody>
 
-      </div>
+<tr>
+<td>Airtime</td>
+<td>₦1000</td>
+<td className="success">Successful</td>
+</tr>
 
-    </div>
+<tr>
+<td>Electricity</td>
+<td>₦5000</td>
+<td className="warning">Pending</td>
+</tr>
 
-  );
+<tr>
+<td>Data</td>
+<td>₦2000</td>
+<td className="error">Failed</td>
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+)
 
 }
