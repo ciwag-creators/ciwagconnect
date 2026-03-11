@@ -1,49 +1,38 @@
 import { NextResponse } from "next/server"
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
 
-export async function POST(req: Request) {
+export async function POST(req: Request){
 
-  const { amount } = await req.json()
+const {email, amount} = await req.json()
 
-  const cookieStore = cookies()
+try{
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies:{
-        async get(name:string){
-          return (await cookieStore).get(name)?.value
-        },
-        set(){},
-        remove(){}
-      }
-    }
-  )
+const response = await fetch("https://api.paystack.co/transaction/initialize",{
 
-  const { data:{ user } } = await supabase.auth.getUser()
+method:"POST",
 
-  if(!user){
-    return NextResponse.json({ error:"Unauthorized" },{ status:401 })
-  }
+headers:{
+"Content-Type":"application/json",
+Authorization:`Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+},
 
-  const reference = "PAY-" + Date.now()
+body:JSON.stringify({
+email,
+amount:amount * 100,
+callback_url:`${process.env.NEXT_PUBLIC_BASE_URL}/payment-success`
+})
 
-  const paystack = await fetch("https://api.paystack.co/transaction/initialize",{
-    method:"POST",
-    headers:{
-      "Content-Type":"application/json",
-      Authorization:`Bearer ${process.env.PAYSTACK_SECRET_KEY}`
-    },
-    body:JSON.stringify({
-      email:user.email,
-      amount: amount * 100,
-      reference
-    })
-  })
+})
 
-  const data = await paystack.json()
+const data = await response.json()
 
-  return NextResponse.json(data.data)
+return NextResponse.json(data)
+
+}catch(error){
+
+return NextResponse.json({
+error:"Payment initialization failed"
+})
+
+}
+
 }
