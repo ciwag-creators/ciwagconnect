@@ -13,8 +13,8 @@ export async function POST(req: Request) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies:{
-        get(name:string){
-          return cookieStore.get(name)?.value
+        async get(name:string){
+          return (await cookieStore).get(name)?.value
         },
         set(){},
         remove(){}
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     method:"POST",
     headers:{
       "Content-Type":"application/json",
-      Authorization:Bearer ${process.env.PAYSTACK_SECRET_KEY}
+      Authorization:`Bearer ${process.env.PAYSTACK_SECRET_KEY}`
     },
     body:JSON.stringify({
       email:user.email,
