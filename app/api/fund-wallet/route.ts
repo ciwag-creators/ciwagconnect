@@ -17,7 +17,7 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           email: email,
           amount: amount * 100,
-          callback_url: ${process.env.NEXT_PUBLIC_BASE_URL}/payment-success
+          callback_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment-success`
         })
       }
     )
