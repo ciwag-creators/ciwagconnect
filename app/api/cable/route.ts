@@ -98,27 +98,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const reference = "CAB-" + Date.now()
-
-    // call provider
-    const providerResponse =
-      await payCable(
-        provider,
-        smartcard,
-        numericAmount,
-        plan
-      )
-
-    if (providerResponse.status !== "success") {
-      return NextResponse.json(
-        { error: "Cable provider failed" },
-        { status: 500 }
-      )
-    }
-
-    // deduct wallet
-    const newBalance =
-      Number(wallet.balance) - finalAmount
+    const newBalance = Number(wallet.balance) - finalAmount
 
     await supabase
       .from("wallets")

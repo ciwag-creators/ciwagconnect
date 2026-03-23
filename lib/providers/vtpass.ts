@@ -36,35 +36,26 @@ export async function payElectricity(
       }
     )
 
-    const data = await res.json()
-
-    return data
-
+    return await res.json()
   } catch (error) {
-
-    console.error("Electricity Provider Error:", error)
+    console.error("VTPass error:", error)
 
     return {
       status: "failed",
-      message: "Electricity payment failed"
+      message: "PIN purchase failed",
     }
   }
 }
 
-// =============================
-// Cable
-// =============================
 export async function payCable(
-  provider: string,
   smartcard: string,
   amount: number,
+  provider: string,
   plan: string
 ) {
-
   const request_id = Date.now().toString()
 
   try {
-
     const res = await fetch(
       `${process.env.VTPASS_BASE_URL}/pay`,
       {
@@ -99,9 +90,7 @@ export async function payCable(
       status: "failed",
       data,
     }
-
   } catch (error) {
-
     console.error("Cable Provider Error:", error)
 
     return {
@@ -111,20 +100,14 @@ export async function payCable(
   }
 }
 
-
-// =============================
-// PIN
-// =============================
 export async function buyPin(
   serviceID: string,
   amount: number,
   quantity: number
 ) {
-
   const request_id = Date.now().toString()
 
   try {
-
     const res = await fetch(
       `${process.env.VTPASS_BASE_URL}/pay`,
       {
@@ -158,9 +141,7 @@ export async function buyPin(
       status: "failed",
       data,
     }
-
   } catch (error) {
-
     console.error("PIN Provider Error:", error)
 
     return {
