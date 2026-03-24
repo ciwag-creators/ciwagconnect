@@ -17,90 +17,21 @@ type ProviderResponse = {
 export async function buyDataSwitch(
   phone: string,
   plan: string,
-  amount: number,
   network: string
-): Promise<ProviderResponse> {
-  try {
-    const { data: providers, error } = await supabase
-      .from("vtu_providers")
-      .select("*")
-      .eq("service", "data")
-      .eq("status", "active")
+) {
+  const res = await buyData(
+    phone,
+    plan,
+    amount,
+    network
+  )
 
-    if (error) {
-      console.error("Provider fetch error:", error)
-      return { status: "failed", message: "Provider fetch failed" }
-    }
-
-    if (!providers || providers.length === 0) {
-      return {
-        status: "failed",
-        message: "No active provider",
-      }
-    }
-
-    // =====================
-    // IAcafe (Primary)
-    // =====================
-    const primary = providers.find(
-      (p) => p.provider === "iacafe"
-    )
-
-    if (primary) {
-      try {
-        const res = await iacafeData(
-          phone,
-          plan,
-          amount,
-          network
-        )
-
-        if (res?.status === "success") {
-          return {
-            status: "success",
-            provider: "iacafe",
-            data: res.data,
-          }
-        }
-      } catch (err) {
-        console.log("IAcafe failed, switching...")
-      }
-    }
-
-    // =====================
-    // ClubKonnect (Backup)
-    // =====================
-    const backup = providers.find(
-      (p) => p.provider === "clubkonnect"
-    )
-
-    if (backup) {
-      try {
-        const res = await clubData(
-          phone,
-          plan,
-          amount,
-          network
-        )
-
-        if (res?.status === "success") {
-          return {
-            status: "success",
-            provider: "clubkonnect",
-            data: res.data,
-          }
-        }
-      } catch (err) {
-        console.log("ClubKonnect failed")
-      }
-    }
-
+  if (res?.status === "success") {
     return {
-      status: "failed",
-      message: "All providers failed",
+      ...res,
+      provider: "iacafe",
     }
-  } catch (error) {
-    console.error("Data switch error:", error)
+  }
 
     return {
       status: "failed",

@@ -8,15 +8,31 @@ export async function POST(req: Request) {
 
     const numericAmount = Number(amount)
 
-    if (!network || !phone || !numericAmount || numericAmount <= 0) {
+    // validate input
+    if (!network  !phone  !numericAmount || numericAmount <= 0) {
       return NextResponse.json(
         { error: "Invalid input" },
         { status: 400 }
       )
     }
 
-    const supabase = await createSupabaseServer()
+    const cookieStore = await cookies()
 
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+          set() {},
+          remove() {},
+        },
+      }
+    )
+
+    // get logged in user
     const {
       data: { user },
       error: userError,
@@ -84,6 +100,7 @@ export async function POST(req: Request) {
       )
     }
 
+    // deduct wallet after success
     const newBalance =
       Number(wallet.balance) - finalAmount
 
@@ -100,11 +117,48 @@ export async function POST(req: Request) {
       profit: finalAmount - numericAmount,
       reference,
       status: "success",
-      phone,
       network,
-      provider: providerResponse.provider ?? "iacafe",
+      phone,
+      provider: providerResponse.provider || "iacafe",
     })
 
+    // referral commission
+    const { data: referral } = await supabase
+      .from("referrals")
+      .select("*")
+      .eq("referred_id", user.id)
+      .single()
+
+    if (referral) {
+      const commission = finalAmount * 0.02
+
+      const { data: refWallet } =
+        await supabase
+          .from("wallets")
+          .select("*")
+          .eq("user_id", referral.referrer_id)
+          .single()
+
+      if (refWallet) {
+        await supabase
+          .from("wallets")
+          .update({
+            balance:
+              Number(refWallet.balance) +
+              commission,
+          })
+          .eq("user_id", referral.referrer_id)
+
+        await supabase
+          .from("referrals")
+          .update({
+            commission:
+              Number(referral.commission || 0) +
+              commission,
+          })
+          .eq("id", referral.id)
+      }
+    }
     return NextResponse.json({
       success: true,
       reference,
