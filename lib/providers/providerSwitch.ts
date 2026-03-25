@@ -6,7 +6,6 @@ import {
   payCable as buyCableVtpass,
 } from "./vtpass"
 
-
 // =============================
 // Airtime
 // =============================
@@ -15,9 +14,7 @@ export async function buyAirtime(
   phone: string,
   amount: number
 ): Promise<any> {
-
   try {
-
     const primary = await iacafeAirtime(
       phone,
       network,
@@ -25,21 +22,34 @@ export async function buyAirtime(
     )
 
     if (primary?.status === "success") {
-      return primary
+      return {
+        status: "success",
+        provider: "iacafe",
+        data: primary.data,
+      }
     }
 
-    throw new Error("IAcafe failed")
+    console.log("IAcafe failed, switching to ClubKonnect...")
+  } catch (err) {
+    console.log("IAcafe error:", err)
+  }
 
-  } catch {
+  // fallback
+  const fallback = await clubAirtime(
+    phone,
+    amount,
+    network
+  )
 
-    return await clubAirtime(
-      phone,
-      amount,
-      network
-    )
+  if (fallback?.status === "success") {
+    return fallback
+  }
+
+  return {
+    status: "failed",
+    message: "All providers failed",
   }
 }
-
 
 // =============================
 // Data
@@ -50,9 +60,7 @@ export async function buyData(
   plan: string,
   amount: number
 ): Promise<any> {
-
   try {
-
     const primary = await iacafeData(
       phone,
       plan,
@@ -61,22 +69,35 @@ export async function buyData(
     )
 
     if (primary?.status === "success") {
-      return primary
+      return {
+        status: "success",
+        provider: "iacafe",
+        data: primary.data,
+      }
     }
 
-    throw new Error("IAcafe failed")
+    console.log("IAcafe data failed, switching...")
+  } catch (err) {
+    console.log("IAcafe data error:", err)
+  }
 
-  } catch {
+  // fallback
+  const fallback = await clubData(
+    phone,
+    plan,
+    amount,
+    network
+  )
 
-    return await clubData(
-      phone,
-      plan,
-      amount,
-      network
-    )
+  if (fallback?.status === "success") {
+    return fallback
+  }
+
+  return {
+    status: "failed",
+    message: "All providers failed",
   }
 }
-
 
 // =============================
 // Electricity
@@ -87,14 +108,13 @@ export async function buyElectricity(
   amount: number,
   meterType: string
 ) {
-  return buyElectricityVtpass(
+  return await buyElectricityVtpass(
     meter,
-    amount,
+    amount, // ✅ FIX: vtpass expects string
     disco,
     meterType
   )
 }
-
 
 // =============================
 // Cable
@@ -102,13 +122,13 @@ export async function buyElectricity(
 export async function buyCable(
   provider: string,
   smartcard: string,
-  amount: string,
+  amount: number,
   plan: string
 ) {
   return await buyCableVtpass(
-    provider,
     smartcard,
-    amount,
+    String(amount), // ✅ FIX: vtpass expects string
+    provider,
     plan
   )
 }
