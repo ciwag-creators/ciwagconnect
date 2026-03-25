@@ -1,9 +1,12 @@
+// ./providers/clubkonnect.ts
+
+// Airtime purchase function
 export async function clubAirtime(
   phone: string,
   amount: number,
   network: string
 ) {
-  const res = await fetch(${process.env.CLUB_BASE_URL}/airtime, {
+  const res = await fetch(`${process.env.CLUB_BASE_URL}/airtime`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -23,10 +26,11 @@ export async function clubAirtime(
 // Data purchase function (new)
 export async function clubData(
   phone: string,
-  plan: string, // e.g., '1GB', '5GB'
+  plan: string,
+  amount: number,
   network: string
 ) {
-  const res = await fetch(${process.env.CLUB_BASE_URL}/data, {
+  const res = await fetch(`${process.env.CLUB_BASE_URL}/data`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -40,5 +44,20 @@ export async function clubData(
     }),
   })
 
-  return await res.json()
+    const data = await res.json()
+
+    if (data?.status === "success") {
+      return {
+        status: "success",
+        data,
+      }
+    }
+
+    return { status: "failed" }
+
+  } catch (error) {
+    console.error("ClubKonnect Data Error:", error)
+
+    return { status: "failed" }
+  }
 }
