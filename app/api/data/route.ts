@@ -101,6 +101,7 @@ export async function POST(req: Request) {
       await buyDataSwitch(
         phone,
         plan,
+        numericAmount,
         network
       )
 
