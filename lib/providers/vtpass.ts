@@ -1,14 +1,7 @@
-// lib/providers/vtpass.ts
-
-// =============================
-// Electricity
-// =============================
-// lib/providers/vtpass.ts
-
 export async function payElectricity(
+  disco: string,
   meter: string,
   amount: number,
-  disco: string,
   meterType: string
 ): Promise<any> {
 
@@ -36,7 +29,20 @@ export async function payElectricity(
       }
     )
 
-    return await res.json()
+    const data = await res.json()
+
+    if (data?.code === "000") {
+      return {
+        status: "success",
+        data,
+        provider: "vtpass",
+      }
+    }
+
+    return {
+      status: "failed",
+      data,
+    }
   } catch (error) {
     console.error("VTPass error:", error)
 
@@ -47,10 +53,14 @@ export async function payElectricity(
   }
 }
 
+
+// =============================
+// Cable
+// =============================
 export async function payCable(
-  smartcard: string,
-  amount: string,
   provider: string,
+  smartcard: string,
+  amount: number,
   plan: string
 ) {
   const request_id = Date.now().toString()
@@ -90,6 +100,7 @@ export async function payCable(
       status: "failed",
       data,
     }
+
   } catch (error) {
     console.error("Cable Provider Error:", error)
 
@@ -100,6 +111,10 @@ export async function payCable(
   }
 }
 
+
+// =============================
+// PIN
+// =============================
 export async function buyPin(
   serviceID: string,
   amount: number,
@@ -141,6 +156,7 @@ export async function buyPin(
       status: "failed",
       data,
     }
+
   } catch (error) {
     console.error("PIN Provider Error:", error)
 
