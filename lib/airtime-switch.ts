@@ -20,10 +20,11 @@ export async function buyAirtimeSwitch(
   network: string
 ): Promise<ProviderResponse> {
   try {
-    const res = await buyAirtime(
+    const res = await iacafeAirtime(
       phone,
-      amount,
-      network
+      network,
+      amount
+      
     )
 
     if (res?.status === "success") {

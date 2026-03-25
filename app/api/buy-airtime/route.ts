@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
-import { createSupabaseServer } from "@/lib/supabase/server"
+import { createServerClient } from "@supabase/ssr"
 import { buyAirtimeSwitch } from "@/lib/airtime-switch"
-
+import { cookies } from "next/headers"
 export async function POST(req: Request) {
   try {
     const { network, phone, amount } = await req.json()

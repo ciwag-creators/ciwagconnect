@@ -5,33 +5,26 @@ import { buyDataSwitch } from "@/lib/data-switch"
 
 export async function POST(req: Request) {
   try {
-    const { network, phone, plan, amount } =
-      await req.json()
+    const { network, phone, plan } = await req.json()
 
-    const numericAmount = Number(amount)
-
-    if (
-      !network ||
-      !phone ||
-      !plan ||
-      !numericAmount ||
-      numericAmount <= 0
-    ) {
+    // ✅ Validate input
+    if (!network  || !phone  || !plan) {
       return NextResponse.json(
         { error: "Invalid input" },
         { status: 400 }
       )
     }
 
-    const cookieStore = cookies()
+    // ✅ FIX: must await cookies()
+    const cookieStore = await cookies()
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          async get(name: string) {
-            return (await cookieStore).get(name)?.value
+          get(name: string) {
+            return cookieStore.get(name)?.value
           },
           set() {},
           remove() {},
@@ -39,7 +32,7 @@ export async function POST(req: Request) {
       }
     )
 
-    // logged in user
+    // ✅ Get user
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -51,7 +44,7 @@ export async function POST(req: Request) {
       )
     }
 
-    // wallet
+    // ✅ Get wallet
     const { data: wallet, error: walletError } =
       await supabase
         .from("wallets")
@@ -66,7 +59,25 @@ export async function POST(req: Request) {
       )
     }
 
-    // pricing
+    // ✅ FETCH PLAN PRICE FROM DB (CRITICAL FIX)
+    const { data: planData, error: planError } =
+      await supabase
+        .from("data_plans")
+        .select("*")
+        .eq("network", network)
+        .eq("plan", plan)
+        .single()
+
+    if (planError || !planData) {
+      return NextResponse.json(
+        { error: "Invalid data plan" },
+        { status: 400 }
+      )
+    }
+
+    const numericAmount = Number(planData.amount)
+
+    // ✅ Pricing
     const { data: pricing } = await supabase
       .from("pricing")
       .select("*")
@@ -86,7 +97,7 @@ export async function POST(req: Request) {
         numericAmount + Number(pricing.margin)
     }
 
-    // balance check
+    // ✅ Balance check
     if (Number(wallet.balance) < finalAmount) {
       return NextResponse.json(
         { error: "Insufficient balance" },
@@ -96,26 +107,22 @@ export async function POST(req: Request) {
 
     const reference = "DATA-" + Date.now()
 
-    // provider switch
-    const providerResponse =
-      await buyDataSwitch(
-        phone,
-        plan,
-        numericAmount,
-        network
-      )
+    // ✅ Call provider
+    const providerResponse = await buyDataSwitch(
+      phone,
+      plan,
+      numericAmount,
+      network
+    )
 
-    if (
-      !providerResponse ||
-      providerResponse.status !== "success"
-    ) {
+    if (!providerResponse || providerResponse.status !== "success") {
       return NextResponse.json(
         { error: "Data provider failed" },
         { status: 500 }
       )
     }
 
-    // deduct wallet
+    // ✅ Deduct wallet
     const newBalance =
       Number(wallet.balance) - finalAmount
 
@@ -124,7 +131,7 @@ export async function POST(req: Request) {
       .update({ balance: newBalance })
       .eq("user_id", user.id)
 
-    // save transaction
+    // ✅ Save transaction
     await supabase.from("transactions").insert({
       user_id: user.id,
       type: "data",
@@ -135,10 +142,11 @@ export async function POST(req: Request) {
       status: "success",
       phone,
       plan,
+      network,
       provider: providerResponse.provider,
     })
 
-    // referral commission
+    // ✅ Referral commission
     const { data: referral } = await supabase
       .from("referrals")
       .select("*")
@@ -160,17 +168,15 @@ export async function POST(req: Request) {
           .from("wallets")
           .update({
             balance:
-              Number(refWallet.balance) +
-              commission,
+              Number(refWallet.balance) + commission,
           })
           .eq("user_id", referral.referrer_id)
-
-        await supabase
+          
+          await supabase
           .from("referrals")
           .update({
             bonus:
-              Number(referral.bonus || 0) +
-              commission,
+              Number(referral.bonus || 0) + commission,
           })
           .eq("id", referral.id)
       }
@@ -181,8 +187,10 @@ export async function POST(req: Request) {
       reference,
       provider: providerResponse.provider,
     })
+
   } catch (error) {
     console.error("Data API error:", error)
+
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }

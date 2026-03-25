@@ -1,5 +1,3 @@
-// lib/providers/iacafe-data.ts
-
 export async function buyData(
   phone: string,
   plan: string,
@@ -7,33 +5,34 @@ export async function buyData(
   network: string
 ) {
   try {
+    const url = `${process.env.IACAFE_BASE_URL}/data`
 
-    const res = await fetch(
-      `${process.env.IACAFE_BASE_URL}/data`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.IACAFE_API_KEY}`,
-        },
-        body: JSON.stringify({
-          phone,
-          plan,
-          amount,
-          network,
-        }),
-      }
-    )
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.IACAFE_API_KEY}`,
+      },
+      body: JSON.stringify({
+        phone,
+        plan,
+        amount,
+        network,
+      }),
+    })
 
     const text = await res.text()
 
     console.log("IAcafe Data Raw Response:", text)
 
     try {
-
       const data = JSON.parse(text)
 
-      if (data?.status === "success") {
+      // handle both possible formats
+      if (
+        data?.status === "success" ||
+        data?.success === true
+      ) {
         return {
           status: "success",
           data,
@@ -45,19 +44,14 @@ export async function buyData(
         status: "failed",
         data,
       }
-
     } catch {
-
       return {
         status: "failed",
         message: "Invalid IAcafe data response",
         raw: text,
       }
-
     }
-
   } catch (error) {
-
     console.error("IAcafe Data Error:", error)
 
     return {

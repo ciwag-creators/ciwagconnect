@@ -5,15 +5,11 @@ import { payCable } from "@/lib/providers/vtpass"
 
 export async function POST(req: Request) {
   try {
-    const {
-      provider,
-      smartcard,
-      plan,
-      amount
-    } = await req.json()
+    const { provider, smartcard, plan, amount } = await req.json()
 
     const numericAmount = Number(amount)
 
+    // ✅ Validate input
     if (
       !provider ||
       !smartcard ||
@@ -27,8 +23,13 @@ export async function POST(req: Request) {
       )
     }
 
+    // ✅ Generate reference
+    const reference = "CAB-" + Date.now()
+
+    // ✅ Fix cookies (Next.js 15)
     const cookieStore = await cookies()
 
+    // ✅ Supabase client
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -43,7 +44,7 @@ export async function POST(req: Request) {
       }
     )
 
-    // get user
+    // ✅ Get user
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
       )
     }
 
-    // get wallet
+    // ✅ Get wallet
     const { data: wallet, error: walletError } =
       await supabase
         .from("wallets")
@@ -70,7 +71,7 @@ export async function POST(req: Request) {
       )
     }
 
-    // pricing
+    // ✅ Pricing
     const { data: pricing } = await supabase
       .from("pricing")
       .select("*")
@@ -90,7 +91,7 @@ export async function POST(req: Request) {
         numericAmount + Number(pricing.margin)
     }
 
-    // balance check
+    // ✅ Balance check
     if (Number(wallet.balance) < finalAmount) {
       return NextResponse.json(
         { error: "Insufficient balance" },
@@ -98,14 +99,37 @@ export async function POST(req: Request) {
       )
     }
 
-    const newBalance = Number(wallet.balance) - finalAmount
+    // =============================
+    // ✅ CALL PROVIDER FIRST
+    // =============================
+    const providerResponse = await payCable(
+      provider,
+      smartcard,
+      numericAmount.toString(),
+      plan
+    )
+
+    if (providerResponse.status !== "success") {
+      return NextResponse.json(
+        { error: "Cable provider failed" },
+        { status: 500 }
+      )
+    }
+
+    // =============================
+    // ✅ DEDUCT WALLET AFTER SUCCESS
+    // =============================
+    const newBalance =
+      Number(wallet.balance) - finalAmount
 
     await supabase
       .from("wallets")
       .update({ balance: newBalance })
       .eq("user_id", user.id)
 
-    // save transaction
+    // =============================
+    // ✅ SAVE TRANSACTION
+    // =============================
     await supabase.from("transactions").insert({
       user_id: user.id,
       type: "cable",
@@ -120,13 +144,21 @@ export async function POST(req: Request) {
       api_provider: "vtpass",
     })
 
+    // =============================
+    // ✅ RESPONSE
+    // =============================
     return NextResponse.json({
       success: true,
       reference,
       provider: "vtpass",
-      customer: providerResponse.data?.content?.Customer_Name,
-      package: providerResponse.data?.content?.Package,
+      customer:
+        providerResponse.data?.content?.Customer_Name ||
+        null,
+      package:
+        providerResponse.data?.content?.Package || null,
+      newBalance,
     })
+
   } catch (error) {
     console.error("Cable API error:", error)
 

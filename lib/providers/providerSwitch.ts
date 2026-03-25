@@ -102,7 +102,7 @@ export async function buyElectricity(
 export async function buyCable(
   provider: string,
   smartcard: string,
-  amount: number,
+  amount: string,
   plan: string
 ) {
   return await buyCableVtpass(

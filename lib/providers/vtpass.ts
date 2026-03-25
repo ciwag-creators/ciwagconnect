@@ -49,7 +49,7 @@ export async function payElectricity(
 
 export async function payCable(
   smartcard: string,
-  amount: number,
+  amount: string,
   provider: string,
   plan: string
 ) {

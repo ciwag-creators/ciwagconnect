@@ -29,7 +29,10 @@ export async function buyDataSwitch(
 
     if (error) {
       console.error("Provider fetch error:", error)
-      return { status: "failed", message: "Provider fetch failed" }
+      return {
+        status: "failed",
+        message: "Provider fetch failed",
+      }
     }
 
     if (!providers || providers.length === 0) {
@@ -51,8 +54,11 @@ export async function buyDataSwitch(
         const res = await iacafeData(
           phone,
           plan,
+          amount,   // ✅ FIXED
           network
         )
+
+        console.log("IAcafe Data Response:", res)
 
         if (res?.status === "success") {
           return {
@@ -78,8 +84,11 @@ export async function buyDataSwitch(
         const res = await clubData(
           phone,
           plan,
+          amount,   // ✅ FIXED
           network
         )
+
+        console.log("ClubKonnect Data Response:", res)
 
         if (res?.status === "success") {
           return {
