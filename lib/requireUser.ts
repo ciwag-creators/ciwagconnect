@@ -1,15 +1,14 @@
 import { createSupabaseClient } from "./supabase/client"
 
 export async function requireUser() {
-
   const supabase = createSupabaseClient()
 
   const {
     data: { user },
-    error
+    error,
   } = await supabase.auth.getUser()
 
-  if (!user || error) {
+  if (error || !user) {
     throw new Error("Unauthorized")
   }
 

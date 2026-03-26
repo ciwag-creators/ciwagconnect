@@ -111,6 +111,7 @@ export async function buyElectricity(
   return await buyElectricityVtpass(
     meter,
     amount,
+    disco,
     meterType
   )
 }
@@ -127,6 +128,7 @@ export async function buyCable(
   return await buyCableVtpass(
     provider,
     smartcard,
-    amount
+    amount,
+    plan
   )
 }
