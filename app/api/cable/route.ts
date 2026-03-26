@@ -23,9 +23,6 @@ export async function POST(req: Request) {
       )
     }
 
-    // ✅ Generate reference
-    const reference = "CAB-" + Date.now()
-
     // ✅ Fix cookies (Next.js 15)
     const cookieStore = await cookies()
 
@@ -99,13 +96,13 @@ export async function POST(req: Request) {
       )
     }
 
-    // =============================
-    // ✅ CALL PROVIDER FIRST
-    // =============================
+    const reference = "CAB-" + Date.now()
+
+    // ✅ Call provider (FIXED TYPE)
     const providerResponse = await payCable(
-      provider,
       smartcard,
-      numericAmount.toString(),
+      String(numericAmount), // ✅ IMPORTANT FIX
+      provider,
       plan
     )
 
@@ -116,9 +113,7 @@ export async function POST(req: Request) {
       )
     }
 
-    // =============================
-    // ✅ DEDUCT WALLET AFTER SUCCESS
-    // =============================
+    // ✅ Deduct wallet AFTER success
     const newBalance =
       Number(wallet.balance) - finalAmount
 
@@ -127,9 +122,7 @@ export async function POST(req: Request) {
       .update({ balance: newBalance })
       .eq("user_id", user.id)
 
-    // =============================
-    // ✅ SAVE TRANSACTION
-    // =============================
+    // ✅ Save transaction
     await supabase.from("transactions").insert({
       user_id: user.id,
       type: "cable",
@@ -144,16 +137,13 @@ export async function POST(req: Request) {
       api_provider: "vtpass",
     })
 
-    // =============================
-    // ✅ RESPONSE
-    // =============================
+    // ✅ Response
     return NextResponse.json({
       success: true,
       reference,
       provider: "vtpass",
       customer:
-        providerResponse.data?.content?.Customer_Name ||
-        null,
+        providerResponse.data?.content?.Customer_Name || null,
       package:
         providerResponse.data?.content?.Package || null,
       newBalance,

@@ -109,9 +109,9 @@ export async function buyElectricity(
   meterType: string
 ) {
   return await buyElectricityVtpass(
+    disco,
     meter,
     amount, // ✅ FIX: vtpass expects string
-    disco,
     meterType
   )
 }
@@ -126,9 +126,9 @@ export async function buyCable(
   plan: string
 ) {
   return await buyCableVtpass(
-    smartcard,
-    String(amount), // ✅ FIX: vtpass expects string
     provider,
+    smartcard,
+    amount, // ✅ FIX: vtpass expects string
     plan
   )
 }
