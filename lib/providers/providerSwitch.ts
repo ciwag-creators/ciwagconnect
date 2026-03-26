@@ -111,8 +111,7 @@ export async function buyElectricity(
   return await buyElectricityVtpass(
     disco,
     meter,
-    amount, // ✅ FIX: vtpass expects string
-    meterType
+    amount
   )
 }
 
