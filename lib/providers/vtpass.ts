@@ -1,17 +1,15 @@
 export async function payElectricity(
-  
+  disco: string,
   meter: string,
   amount: number,
-  disco: string,
   meterType: string
-): Promise<any> {
-
+) {
   const request_id = Date.now().toString()
 
   try {
 
     const res = await fetch(
-      `${process.env.VTPASS_BASE_URL}/pay`,
+      `${process.env.VTPASS_BASE_URL}/electricity`,
       {
         method: "POST",
         headers: {
@@ -20,12 +18,10 @@ export async function payElectricity(
           "secret-key": process.env.VTPASS_SECRET!,
         },
         body: JSON.stringify({
-          request_id,
-          serviceID: disco,
-          billersCode: meter,
-          variation_code: meterType,
+          disco,
+          meter,
           amount,
-          phone: "08000000000",
+          meterType,
         }),
       }
     )
@@ -44,15 +40,17 @@ export async function payElectricity(
       status: "failed",
       data,
     }
+
   } catch (error) {
-    console.error("VTPass error:", error)
+    console.error("Electricity Provider Error:", error)
 
     return {
       status: "failed",
-      message: "PIN purchase failed",
+      message: "Electricity payment failed",
     }
   }
 }
+
 
 
 // =============================
