@@ -31,19 +31,17 @@ export async function clubAirtime(
     console.log("ClubKonnect Airtime Raw Response:", text)
 
     try {
-      const data = JSON.parse(text)
-
-      return data
-
+      return JSON.parse(text)
     } catch {
       return {
         status: "failed",
-        message: "Invalid provider response",
+        message: "Invalid ClubKonnect response",
         raw: text,
       }
     }
 
   } catch (error) {
+
     console.error("ClubKonnect Airtime Error:", error)
 
     return {
@@ -89,12 +87,13 @@ export async function clubData(
     } catch {
       return {
         status: "failed",
-        message: "Invalid provider response",
+        message: "Invalid ClubKonnect data response",
         raw: text,
       }
     }
 
   } catch (error) {
+
     console.error("ClubKonnect Data Error:", error)
 
     return {
