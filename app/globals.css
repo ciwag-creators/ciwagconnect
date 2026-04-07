@@ -1,0 +1,290 @@
+/* =========================
+   ROOT COLOR SYSTEM
+========================= */
+
+:root {
+
+  /* Surface Colors */
+  --bg-main: #0B0E14;
+  --bg-card: #151921;
+  --bg-nav: #0E121A;
+
+  /* Brand Colors */
+  --primary: #00D2FF;
+  --secondary: #7000FF;
+
+  /* Status Colors */
+  --success: #00FFC2;
+  --error: #FF4B6E;
+  --warning: #FFB340;
+
+  /* Text Colors */
+  --text-bold: #FFFFFF;
+  --text-main: #94A3B8;
+  --text-muted: #475569;
+
+  /* Glass */
+  --glass: rgba(255,255,255,0.03);
+  --border: rgba(255,255,255,0.08);
+}
+
+
+/* =========================
+   GLOBAL RESET
+========================= */
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  background:var(--bg-main);
+  color:var(--text-main);
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+  line-height:1.6;
+}
+
+
+/* =========================
+   NAVBAR
+========================= */
+
+.navbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:18px 40px;
+  background:var(--bg-nav);
+  border-bottom:1px solid var(--border);
+}
+
+.logo{
+  font-size:20px;
+  font-weight:700;
+  color:var(--text-bold);
+  text-decoration:none;
+}
+
+.nav-links a{
+  margin-left:25px;
+  text-decoration:none;
+  color:var(--text-main);
+  font-size:15px;
+  transition:0.2s;
+}
+
+.nav-links a:hover{
+  color:var(--primary);
+}
+
+
+/* =========================
+   HEADER / HERO
+========================= */
+
+.header{
+  text-align:center;
+  padding:80px 20px;
+}
+
+.header h1{
+  font-size:42px;
+  color:var(--text-bold);
+  margin-bottom:10px;
+}
+
+.header p{
+  font-size:18px;
+  color:var(--text-main);
+}
+
+
+/* =========================
+   CONTAINER
+========================= */
+
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:40px 20px;
+}
+
+
+/* =========================
+   GRID SYSTEM
+========================= */
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:25px;
+  margin-top:30px;
+}
+
+
+/* =========================
+   CARDS
+========================= */
+
+.card{
+  background:var(--bg-card);
+  padding:25px;
+  border-radius:12px;
+  text-decoration:none;
+  color:var(--text-main);
+  border:1px solid var(--border);
+  backdrop-filter:blur(12px);
+  transition:0.3s;
+}
+
+.card h3{
+  color:var(--text-bold);
+  margin-bottom:10px;
+}
+
+.card:hover{
+  transform:translateY(-6px);
+  border-color:var(--primary);
+}
+
+
+/* =========================
+   BUTTONS
+========================= */
+
+.button{
+  background:var(--primary);
+  color:black;
+  padding:12px 20px;
+  border:none;
+  border-radius:8px;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.button:hover{
+  opacity:0.9;
+}
+
+.primary-btn{
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  color:white;
+  padding:12px 24px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+
+/* =========================
+   DASHBOARD
+========================= */
+
+.dashboard{
+  max-width:1100px;
+  margin:auto;
+  padding:40px 20px;
+}
+
+.dashboard-title{
+  font-size:28px;
+  color:var(--text-bold);
+  margin-bottom:20px;
+}
+
+
+/* =========================
+   WALLET CARD
+========================= */
+
+.wallet-card{
+  background:var(--glass);
+  border:1px solid var(--border);
+  padding:30px;
+  border-radius:14px;
+  margin-bottom:40px;
+}
+
+.wallet-card h3{
+  color:var(--text-main);
+}
+
+.wallet-card h1{
+  font-size:34px;
+  margin:10px 0;
+  color:var(--primary);
+}
+
+
+/* =========================
+   SERVICE GRID
+========================= */
+
+.services-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:20px;
+}
+
+.service-card{
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  padding:25px;
+  border-radius:12px;
+  text-align:center;
+  text-decoration:none;
+  color:var(--text-main);
+  transition:0.2s;
+}
+
+.service-card:hover{
+  border-color:var(--primary);
+}
+
+.service-card h3{
+  margin-top:10px;
+  color:var(--text-bold);
+}
+
+
+/* =========================
+   TABLE
+========================= */
+
+.transaction-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+}
+
+.transaction-table th{
+  text-align:left;
+  padding:12px;
+  color:var(--text-muted);
+  border-bottom:1px solid var(--border);
+}
+
+.transaction-table td{
+  padding:12px;
+  border-bottom:1px solid var(--border);
+}
+
+
+/* =========================
+   STATUS COLORS
+========================= */
+
+.success{
+  color:var(--success);
+}
+
+.error{
+  color:var(--error);
+}
+
+.warning{
+  color:var(--warning);
+}

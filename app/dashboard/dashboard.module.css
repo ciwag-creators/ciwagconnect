@@ -1,0 +1,120 @@
+/* components/Dashboard.module.css */
+.container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #0D1117;
+  color: #E6EDF3;
+  font-family: 'Inter', sans-serif;
+}
+
+.sidebar {
+  width: 260px;
+  background-color: #161B22;
+  border-right: 1px solid #30363D;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.logo {
+  color: #00FFC2;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-bottom: 3rem;
+}
+
+.navItem {
+  color: #8B949E;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.navItemActive {
+  color: #00FFC2;
+  font-weight: 600;
+}
+
+.main {
+  flex: 1;
+  padding: 3rem;
+}
+
+.walletCard {
+  background-color: #161B22;
+  border: 1px solid #30363D;
+  border-radius: 8px; /* Sharp corners */
+  padding: 2rem;
+  margin-bottom: 2rem;
+  transition: border-color 0.3s;
+}
+
+.walletCard:hover {
+  border-color: #00FFC2;
+}
+
+.balance {
+  font-size: 2.5rem;
+  font-weight: 900;
+  margin-top: 0.5rem;
+}
+
+.currency {
+  color: #00FFC2;
+  margin-right: 4px;
+}
+
+.purchaseBox {
+  max-width: 450px;
+  background-color: #161B22;
+  border: 1px solid #30363D;
+  border-radius: 8px;
+  padding: 2rem;
+}
+
+.inputGroup {
+  margin-bottom: 1.5rem;
+}
+
+.label {
+  display: block;
+  font-size: 0.75rem;
+  color: #8B949E;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  letter-spacing: 1px;
+}
+
+.inputField {
+  width: 100%;
+  background-color: #090C10;
+  border: 1px solid #30363D;
+  color: white;
+  padding: 12px;
+  border-radius: 4px;
+  outline: none;
+}
+
+.inputField:focus {
+  border-color: #00FFC2;
+}
+
+.submitBtn {
+  width: 100%;
+  background-color: #00FFC2;
+  color: #000;
+  border: none;
+  padding: 14px;
+  border-radius: 4px;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.submitBtn:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 15px rgba(0, 255, 194, 0.3);
+}
