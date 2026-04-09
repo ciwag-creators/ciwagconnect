@@ -61,18 +61,18 @@ export async function buyAirtimeSwitch(
 
         console.log("IAcafe Response:", res)
 
-        if (
-          res &&
-          (res.status === "success" ||
-            res.status === "successful" ||
-            res.code === "200")
-        ) {
-          return {
-            status: "success",
-            provider: "iacafe",
-            data: res,
-          }
-        }
+     const success =
+  res?.status === "success" ||
+  res?.status === "successful" ||
+  (res as any)?.code === "200"
+
+if (success) {
+  return {
+    status: "success",
+    provider: "IAcafe",
+    data: res,
+  }
+}
       } catch (err) {
         console.log("IAcafe failed, switching...")
       }
@@ -97,18 +97,18 @@ export async function buyAirtimeSwitch(
 
         console.log("ClubKonnect Response:", res)
 
-        if (
-          res &&
-          (res.status === "success" ||
-            res.status === "successful" ||
-            res.code === "200")
-        ) {
-          return {
-            status: "success",
-            provider: "clubkonnect",
-            data: res,
-          }
-        }
+        const success =
+  res?.status === "success" ||
+  res?.status === "successful" ||
+  (res as any)?.code === "200"
+
+if (success) {
+  return {
+    status: "success",
+    provider: "ClubKonnect",
+    data: res,
+  }
+}
       } catch (err) {
         console.log("ClubKonnect failed")
       }
