@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
 import { buyAirtime as iacafeAirtime } from "./providers/iacafe"
-import { buyAirtime as clubAirtime } from "./providers/clubkonnect"
+import { clubAirtime } from "./providers/clubkonnect"
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -91,8 +91,8 @@ if (success) {
 
         const res = await clubAirtime(
           phone,
+          amount,
           network,
-          amount
         )
 
         console.log("ClubKonnect Response:", res)

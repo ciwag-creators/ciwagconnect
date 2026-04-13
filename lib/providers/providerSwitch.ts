@@ -20,8 +20,8 @@ export async function buyAirtime(
 
     const primary = await iacafeAirtime(
       phone,
-      amount,
-      network
+      network,
+      amount
     )
 
     if (primary?.status === "success") {
@@ -88,9 +88,9 @@ export async function buyElectricity(
   meterType: string
 ) {
   return buyElectricityVtpass(
-    disco,
     meter,
     amount,
+    disco,
     meterType
   )
 }

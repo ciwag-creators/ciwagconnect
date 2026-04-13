@@ -1,30 +1,15 @@
 // lib/providers/clubkonnect.ts
 
-const BASE_URL = process.env.CLUB_BASE_URL
-const USER = process.env.CLUB_USER
-const API_KEY = process.env.CLUB_KEY
-
 // =============================
 // Airtime
 // =============================
-export async function buyAirtime(
+export async function clubAirtime(
   phone: string,
-  network: string,
-  amount: number
+  amount: number,
+  network: string
 ) {
   try {
-    if (!BASE_URL || !USER || !API_KEY) {
-      console.error("ClubKonnect environment missing")
-
-      return {
-        status: "failed",
-        message: "ClubKonnect environment variables missing",
-      }
-    }
-
-    const url = `${BASE_URL}/topup`
-
-    console.log("ClubKonnect Airtime URL:", url)
+    const url = `${process.env.CLUB_BASE_URL}/topup`
 
     const res = await fetch(url, {
       method: "POST",
@@ -32,8 +17,8 @@ export async function buyAirtime(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        UserID: USER,
-        APIKey: API_KEY,
+        UserID: process.env.CLUB_USER,
+        APIKey: process.env.CLUB_KEY,
         MobileNetwork: network,
         Amount: amount,
         MobileNumber: phone,
@@ -41,7 +26,6 @@ export async function buyAirtime(
     })
 
     const text = await res.text()
-
     console.log("ClubKonnect Airtime Raw Response:", text)
 
     let data
@@ -56,11 +40,7 @@ export async function buyAirtime(
       }
     }
 
-    if (
-      data?.Status === "successful" ||
-      data?.Status === "success" ||
-      data?.code === "200"
-    ) {
+    if (data?.Status === "successful") {
       return {
         status: "success",
         provider: "clubkonnect",
@@ -70,10 +50,8 @@ export async function buyAirtime(
 
     return {
       status: "failed",
-      message: data?.Message || "ClubKonnect airtime failed",
       data,
     }
-
   } catch (error) {
     console.error("ClubKonnect Airtime Error:", error)
 
@@ -84,27 +62,17 @@ export async function buyAirtime(
   }
 }
 
-
 // =============================
 // Data
 // =============================
-export async function buyData(
+export async function clubData(
   phone: string,
   plan: string,
   amount: number,
   network: string
 ) {
   try {
-    if (!BASE_URL || !USER || !API_KEY) {
-      return {
-        status: "failed",
-        message: "ClubKonnect environment missing",
-      }
-    }
-
-    const url = `${BASE_URL}/data`
-
-    console.log("ClubKonnect Data URL:", url)
+    const url = `${process.env.CLUB_BASE_URL}/data`
 
     const res = await fetch(url, {
       method: "POST",
@@ -112,8 +80,8 @@ export async function buyData(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        UserID: USER,
-        APIKey: API_KEY,
+        UserID: process.env.CLUB_USER,
+        APIKey: process.env.CLUB_KEY,
         MobileNetwork: network,
         DataPlan: plan,
         Amount: amount,
@@ -122,7 +90,6 @@ export async function buyData(
     })
 
     const text = await res.text()
-
     console.log("ClubKonnect Data Raw Response:", text)
 
     let data
@@ -137,11 +104,7 @@ export async function buyData(
       }
     }
 
-    if (
-      data?.Status === "successful" ||
-      data?.Status === "success" ||
-      data?.code === "200"
-    ) {
+    if (data?.Status === "successful") {
       return {
         status: "success",
         provider: "clubkonnect",
@@ -151,10 +114,8 @@ export async function buyData(
 
     return {
       status: "failed",
-      message: data?.Message || "ClubKonnect data failed",
       data,
     }
-
   } catch (error) {
     console.error("ClubKonnect Data Error:", error)
 

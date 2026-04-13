@@ -6,9 +6,9 @@
 // lib/providers/vtpass.ts
 
 export async function payElectricity(
-  disco: string,
   meter: string,
   amount: number,
+  disco: string,
   meterType: string
 ): Promise<any> {
 

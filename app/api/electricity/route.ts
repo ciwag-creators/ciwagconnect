@@ -99,9 +99,9 @@ const supabase = createServerClient(
     // call provider
     const providerResponse =
       await payElectricity(
-        disco,
         meter,
         numericAmount,
+        disco,
         meterType
       )
 
