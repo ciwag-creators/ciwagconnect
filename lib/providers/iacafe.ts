@@ -3,21 +3,59 @@ export async function buyAirtime(
   amount: number,
   network: string
 ) {
-  const res = await fetch(
-    `${process.env.IACAFE_BASE_URL}/airtime`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.IACAFE_API_KEY}`,
-      },
-      body: JSON.stringify({
-        phone,
-        amount,
-        network,
-      }),
-    }
-  )
+  try {
 
-  return await res.json()
+    const res = await fetch(
+      `${process.env.IACAFE_BASE_URL}/airtime`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.IACAFE_API_KEY}`,
+        },
+        body: JSON.stringify({
+          phone,
+          amount,
+          network,
+        }),
+      }
+    )
+
+    const text = await res.text()
+
+    console.log("IAcafe Airtime Raw Response:", text)
+
+    try {
+      const data = JSON.parse(text)
+
+      if (data?.status === "success") {
+        return {
+          status: "success",
+          data,
+          provider: "iacafe",
+        }
+      }
+
+      return {
+        status: "failed",
+        data,
+      }
+
+    } catch {
+      return {
+        status: "failed",
+        message: "Invalid IAcafe response",
+        raw: text,
+      }
+    }
+
+  } catch (error) {
+
+    console.error("IAcafe Airtime Error:", error)
+
+    return {
+      status: "failed",
+      message: "IAcafe provider failed",
+    }
+  }
 }
