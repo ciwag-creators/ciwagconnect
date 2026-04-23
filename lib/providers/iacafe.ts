@@ -1,25 +1,29 @@
+const API_KEY = process.env.IACAFE_API_KEY
+const BASE_URL = process.env.IACAFE_BASE_URL
+
 export async function buyAirtime(
   phone: string,
-  amount: number,
-  network: string
+  network: string,
+  amount: number
 ) {
   try {
+    const request_id = `air_${network}_${Date.now()}_${Math.random()
+      .toString(36)
+      .slice(2)}`
 
-    const res = await fetch(
-      `${process.env.IACAFE_BASE_URL}/devapi/v1/airtime`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.IACAFE_API_KEY}`,
-        },
-        body: JSON.stringify({
-          phone,
-          amount,
-          network,
-        }),
-      }
-    )
+    const res = await fetch(`${BASE_URL}/airtime`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        request_id,
+        phone,
+        service_id: network, // ✅ VERY IMPORTANT
+        amount,
+      }),
+    })
 
     const text = await res.text()
 
@@ -28,11 +32,11 @@ export async function buyAirtime(
     try {
       const data = JSON.parse(text)
 
-      if (data?.status === "success") {
+      if (data?.success === true) {
         return {
           status: "success",
-          data,
           provider: "iacafe",
+          data,
         }
       }
 
@@ -40,22 +44,19 @@ export async function buyAirtime(
         status: "failed",
         data,
       }
-
     } catch {
       return {
         status: "failed",
-        message: "Invalid IAcafe response",
+        message: "Invalid JSON response",
         raw: text,
       }
     }
-
   } catch (error) {
-
     console.error("IAcafe Airtime Error:", error)
 
     return {
       status: "failed",
-      message: "IAcafe provider failed",
+      message: "IAcafe request failed",
     }
   }
 }

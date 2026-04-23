@@ -2,29 +2,32 @@ import { NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { buyAirtimeSwitch } from "@/lib/airtime-switch"
 import { cookies } from "next/headers"
+
 export async function POST(req: Request) {
   try {
     const { network, phone, amount } = await req.json()
 
     const numericAmount = Number(amount)
 
-    // validate input
-    if (!network  || !phone || !numericAmount || numericAmount <= 0) {
+    // ✅ Validate input
+    if (!network  || !phone  || !numericAmount || numericAmount <= 0) {
       return NextResponse.json(
         { error: "Invalid input" },
         { status: 400 }
       )
     }
 
+    // ✅ FIX: cookies must be awaited (Next.js 15)
     const cookieStore = await cookies()
 
+    // ✅ Supabase client
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          async get(name: string) {
-            return (await cookieStore).get(name)?.value
+          get(name: string) {
+            return cookieStore.get(name)?.value
           },
           set() {},
           remove() {},
@@ -32,7 +35,7 @@ export async function POST(req: Request) {
       }
     )
 
-    // get logged in user
+    // ✅ Get logged-in user
     const {
       data: { user },
       error: userError,
@@ -45,6 +48,7 @@ export async function POST(req: Request) {
       )
     }
 
+    // ✅ Get wallet
     const { data: wallet, error: walletError } =
       await supabase
         .from("wallets")
@@ -59,6 +63,7 @@ export async function POST(req: Request) {
       )
     }
 
+    // ✅ Pricing
     const { data: pricing } = await supabase
       .from("pricing")
       .select("*")
@@ -78,6 +83,7 @@ export async function POST(req: Request) {
         numericAmount + Number(pricing.margin)
     }
 
+    // ✅ Balance check
     if (Number(wallet.balance) < finalAmount) {
       return NextResponse.json(
         { error: "Insufficient balance" },
@@ -85,22 +91,29 @@ export async function POST(req: Request) {
       )
     }
 
-    const reference = "AIR-" + Date.now()
+    const reference = `AIR_${Date.now()}`
 
+    // ✅ Call provider
     const providerResponse = await buyAirtimeSwitch(
       phone,
       numericAmount,
       network
     )
 
+    console.log("Provider Response:", providerResponse)
+
+    // ❗ CRITICAL: do NOT deduct wallet if provider failed
     if (!providerResponse || providerResponse.status !== "success") {
       return NextResponse.json(
-        { error: "Airtime provider failed" },
+        {
+          error: "Airtime provider failed",
+          details: providerResponse?.message || null,
+        },
         { status: 500 }
       )
     }
 
-    // deduct wallet after success
+    // ✅ Deduct wallet ONLY after success
     const newBalance =
       Number(wallet.balance) - finalAmount
 
@@ -109,6 +122,7 @@ export async function POST(req: Request) {
       .update({ balance: newBalance })
       .eq("user_id", user.id)
 
+    // ✅ Save transaction
     await supabase.from("transactions").insert({
       user_id: user.id,
       type: "airtime",
@@ -122,7 +136,7 @@ export async function POST(req: Request) {
       provider: providerResponse.provider || "iacafe",
     })
 
-    // referral commission
+    // ✅ Referral commission
     const { data: referral } = await supabase
       .from("referrals")
       .select("*")
@@ -144,12 +158,10 @@ export async function POST(req: Request) {
           .from("wallets")
           .update({
             balance:
-              Number(refWallet.balance) +
-              commission,
+              Number(refWallet.balance) + commission,
           })
           .eq("user_id", referral.referrer_id)
-
-        await supabase
+await supabase
           .from("referrals")
           .update({
             commission:
@@ -159,11 +171,15 @@ export async function POST(req: Request) {
           .eq("id", referral.id)
       }
     }
+
+    // ✅ Final response
     return NextResponse.json({
       success: true,
       reference,
       newBalance,
+      provider: providerResponse.provider,
     })
+
   } catch (error) {
     console.error("Airtime API Error:", error)
 
