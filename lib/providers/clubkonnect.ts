@@ -10,7 +10,7 @@ export async function clubAirtime(
 ) {
   try {
 
-    const url = `${process.env.CLUB_BASE_URL}/airtime`
+    const url = `${process.env.CLUB_BASE_URL}/topup`
 
     const res = await fetch(url, {
       method: "POST",
