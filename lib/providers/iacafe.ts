@@ -6,7 +6,7 @@ export async function buyAirtime(
   try {
 
     const res = await fetch(
-      `${process.env.IACAFE_BASE_URL}/airtime`,
+      `${process.env.IACAFE_BASE_URL}/devapi/v1/airtime`,
       {
         method: "POST",
         headers: {
