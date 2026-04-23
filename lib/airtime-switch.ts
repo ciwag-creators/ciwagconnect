@@ -22,9 +22,8 @@ export async function buyAirtimeSwitch(
   try {
     const res = await iacafeAirtime(
       phone,
-      network,
-      amount
-      
+      amount,
+      network
     )
 
     if (res?.status === "success") {

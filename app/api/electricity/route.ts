@@ -100,7 +100,7 @@ const supabase = createServerClient(
     const providerResponse =
       await payElectricity(
         meter,
-        numericAmount,
+        String(numericAmount),
         disco,
         meterType
       )
