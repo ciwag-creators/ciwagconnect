@@ -10,12 +10,12 @@ export async function buyAirtime(
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.IACAFE_API_KEY}`,
+          "Authorization": `Bearer ${process.env.IACAFE_API_KEY}`,
         },
         body: JSON.stringify({
           request_id: `air_${network}_${Date.now()}`,
           phone,
-          service_id: network.toLowerCase(), // VERY IMPORTANT
+          service_id: network.toLowerCase(),
           amount,
         }),
       }
@@ -47,6 +47,6 @@ export async function buyAirtime(
 
   } catch (error) {
     console.error("IAcafe Error:", error)
-    return { status: "failed", message: "IAcafe error" }
+    return { status: "failed" }
   }
 }
