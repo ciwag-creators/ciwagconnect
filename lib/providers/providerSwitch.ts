@@ -17,8 +17,8 @@ export async function buyAirtime(
   try {
     const primary = await iacafeAirtime(
       phone,
-      network,
-      amount
+      amount,
+      network
     )
 
     if (primary?.status === "success") {

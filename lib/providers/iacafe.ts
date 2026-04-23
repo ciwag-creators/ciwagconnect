@@ -1,62 +1,52 @@
-const API_KEY = process.env.IACAFE_API_KEY
-const BASE_URL = process.env.IACAFE_BASE_URL
-
 export async function buyAirtime(
   phone: string,
-  network: string,
-  amount: number
+  amount: number,
+  network: string
 ) {
   try {
-    const request_id = `air_${network}_${Date.now()}_${Math.random()
-      .toString(36)
-      .slice(2)}`
-
-    const res = await fetch(`${BASE_URL}/airtime`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        request_id,
-        phone,
-        service_id: network, // ✅ VERY IMPORTANT
-        amount,
-      }),
-    })
+    const res = await fetch(
+      `${process.env.IACAFE_BASE_URL}/airtime`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.IACAFE_API_KEY}`,
+        },
+        body: JSON.stringify({
+          request_id: `air_${network}_${Date.now()}`,
+          phone,
+          service_id: network.toLowerCase(), // VERY IMPORTANT
+          amount,
+        }),
+      }
+    )
 
     const text = await res.text()
+    console.log("IAcafe Airtime Raw:", text)
 
-    console.log("IAcafe Airtime Raw Response:", text)
-
+    let data
     try {
-      const data = JSON.parse(text)
+      data = JSON.parse(text)
+    } catch {
+      return { status: "failed", raw: text }
+    }
 
-      if (data?.success === true) {
-        return {
-          status: "success",
-          provider: "iacafe",
-          data,
-        }
-      }
-
+    if (data?.status === "success" || data?.success === true) {
       return {
-        status: "failed",
+        status: "success",
+        provider: "iacafe",
         data,
       }
-    } catch {
-      return {
-        status: "failed",
-        message: "Invalid JSON response",
-        raw: text,
-      }
     }
-  } catch (error) {
-    console.error("IAcafe Airtime Error:", error)
 
     return {
       status: "failed",
-      message: "IAcafe request failed",
+      message: data?.message || "IAcafe failed",
+      data,
     }
+
+  } catch (error) {
+    console.error("IAcafe Error:", error)
+    return { status: "failed", message: "IAcafe error" }
   }
 }
