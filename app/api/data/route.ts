@@ -1,21 +1,27 @@
 import { NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
-import { buyDataSwitch } from "@/lib/data-switch"
+import { cheapData } from "@/lib/providers/cheapdata"
 
 export async function POST(req: Request) {
   try {
-    const { network, phone, plan } = await req.json()
+    const { network, phone, plan, amount } =
+      await req.json()
 
-    // ✅ Validate input
-    if (!network  || !phone  || !plan) {
+    const numericAmount = Number(amount)
+
+    if (
+      !network ||
+      !phone ||
+      !plan ||
+      !numericAmount
+    ) {
       return NextResponse.json(
         { error: "Invalid input" },
         { status: 400 }
       )
     }
 
-    // ✅ FIX: must await cookies()
     const cookieStore = await cookies()
 
     const supabase = createServerClient(
@@ -32,7 +38,6 @@ export async function POST(req: Request) {
       }
     )
 
-    // ✅ Get user
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -44,60 +49,21 @@ export async function POST(req: Request) {
       )
     }
 
-    // ✅ Get wallet
-    const { data: wallet, error: walletError } =
-      await supabase
-        .from("wallets")
-        .select("*")
-        .eq("user_id", user.id)
-        .single()
+    const { data: wallet } = await supabase
+      .from("wallets")
+      .select("*")
+      .eq("user_id", user.id)
+      .single()
 
-    if (walletError || !wallet) {
+    if (!wallet) {
       return NextResponse.json(
         { error: "Wallet not found" },
         { status: 404 }
       )
     }
 
-    // ✅ FETCH PLAN PRICE FROM DB (CRITICAL FIX)
-    const { data: planData, error: planError } =
-      await supabase
-        .from("data_plans")
-        .select("*")
-        .eq("network", network)
-        .eq("plan", plan)
-        .single()
-
-    if (planError || !planData) {
-      return NextResponse.json(
-        { error: "Invalid data plan" },
-        { status: 400 }
-      )
-    }
-
-    const numericAmount = Number(planData.amount)
-
-    // ✅ Pricing
-    const { data: pricing } = await supabase
-      .from("pricing")
-      .select("*")
-      .eq("service", "data")
-      .single()
-
     let finalAmount = numericAmount
 
-    if (pricing?.type === "percentage") {
-      finalAmount =
-        numericAmount +
-        (numericAmount * Number(pricing.margin)) / 100
-    }
-
-    if (pricing?.type === "flat") {
-      finalAmount =
-        numericAmount + Number(pricing.margin)
-    }
-
-    // ✅ Balance check
     if (Number(wallet.balance) < finalAmount) {
       return NextResponse.json(
         { error: "Insufficient balance" },
@@ -105,24 +71,20 @@ export async function POST(req: Request) {
       )
     }
 
-    const reference = "DATA-" + Date.now()
-
-    // ✅ Call provider
-    const providerResponse = await buyDataSwitch(
+    const providerResponse = await cheapData(
       phone,
+      network,
       plan,
-      numericAmount,
-      network
+      numericAmount
     )
 
-    if (!providerResponse || providerResponse.status !== "success") {
+    if (providerResponse.status !== "success") {
       return NextResponse.json(
         { error: "Data provider failed" },
         { status: 500 }
       )
     }
 
-    // ✅ Deduct wallet
     const newBalance =
       Number(wallet.balance) - finalAmount
 
@@ -131,65 +93,29 @@ export async function POST(req: Request) {
       .update({ balance: newBalance })
       .eq("user_id", user.id)
 
-    // ✅ Save transaction
+    const reference = "DATA-" + Date.now()
+
     await supabase.from("transactions").insert({
       user_id: user.id,
       type: "data",
       amount: numericAmount,
       charged: finalAmount,
-      profit: finalAmount - numericAmount,
+      profit: 0,
       reference,
       status: "success",
       phone,
       plan,
-      network,
-      provider: providerResponse.provider,
+      provider: "cheapdata",
     })
-
-    // ✅ Referral commission
-    const { data: referral } = await supabase
-      .from("referrals")
-      .select("*")
-      .eq("referred_id", user.id)
-      .single()
-
-    if (referral) {
-      const commission = finalAmount * 0.02
-
-      const { data: refWallet } =
-        await supabase
-          .from("wallets")
-          .select("*")
-          .eq("user_id", referral.referrer_id)
-          .single()
-
-      if (refWallet) {
-        await supabase
-          .from("wallets")
-          .update({
-            balance:
-              Number(refWallet.balance) + commission,
-          })
-          .eq("user_id", referral.referrer_id)
-          
-          await supabase
-          .from("referrals")
-          .update({
-            bonus:
-              Number(referral.bonus || 0) + commission,
-          })
-          .eq("id", referral.id)
-      }
-    }
 
     return NextResponse.json({
       success: true,
       reference,
-      provider: providerResponse.provider,
+      newBalance,
     })
 
   } catch (error) {
-    console.error("Data API error:", error)
+    console.error("Data API Error:", error)
 
     return NextResponse.json(
       { error: "Something went wrong" },

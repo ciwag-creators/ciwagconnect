@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 import { buyData as iacafeData } from "./providers/iacafe-data"
 import { clubData } from "./providers/clubkonnect"
+import { cheapData } from "./providers/cheapdata"
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,96 +17,68 @@ type ProviderResponse = {
 
 export async function buyDataSwitch(
   phone: string,
-  plan: string,
-  amount: number,
-  network: string
+  bundle_id: string
 ): Promise<ProviderResponse> {
   try {
+    // ✅ GET ACTIVE PROVIDERS ORDERED BY PRIORITY
     const { data: providers, error } = await supabase
       .from("vtu_providers")
       .select("*")
       .eq("service", "data")
       .eq("status", "active")
+      .order("priority", { ascending: true })
 
     if (error) {
       console.error("Provider fetch error:", error)
-      return {
-        status: "failed",
-        message: "Provider fetch failed",
-      }
+      return { status: "failed", message: "Provider fetch failed" }
     }
 
     if (!providers || providers.length === 0) {
-      return {
-        status: "failed",
-        message: "No active provider",
-      }
+      return { status: "failed", message: "No active provider" }
     }
 
-    // =====================
-    // IAcafe (Primary)
-    // =====================
-    const primary = providers.find(
-      (p) => p.provider === "iacafe"
-    )
-
-    if (primary) {
+    // ✅ LOOP THROUGH PROVIDERS (VERY IMPORTANT)
+    for (const provider of providers) {
       try {
-        const res = await iacafeData(
-          phone,
-          plan,
-          amount,   // ✅ FIXED
-          network
-        )
+        let res: any = null
 
-        console.log("IAcafe Data Response:", res)
+        // =====================
+        // SWITCH PER PROVIDER
+        // =====================
+        if (provider.provider === "iacafe") {
+          res = await iacafeData(phone, plan, amount, network)
+        }
 
-        if (res?.status === "success") {
+        if (provider.provider === "clubkonnect") {
+          res = await clubData(phone, plan, amount, network)
+        }
+
+        if (provider.provider === "cheapdata") {
+          res = await cheapData(phone, network, plan, amount)
+        }
+
+        console.log(${provider.provider} response:, res)
+
+        // ✅ SUCCESS CHECK (NORMALIZED)
+        if (res && res.status === "success") {
           return {
             status: "success",
-            provider: "iacafe",
+            provider: provider.provider,
             data: res.data,
           }
         }
+
       } catch (err) {
-        console.log("IAcafe failed, switching...")
+        console.log(${provider.provider} failed, trying next...)
       }
     }
 
-    // =====================
-    // ClubKonnect (Backup)
-    // =====================
-    const backup = providers.find(
-      (p) => p.provider === "clubkonnect"
-    )
-
-    if (backup) {
-      try {
-        const res = await clubData(
-          phone,
-          plan,
-          amount,   // ✅ FIXED
-          network
-        )
-
-        console.log("ClubKonnect Data Response:", res)
-
-        if (res?.status === "success") {
-          return {
-            status: "success",
-            provider: "clubkonnect",
-            data: res.data,
-          }
-        }
-      } catch (err) {
-        console.log("ClubKonnect failed")
-      }
-    }
-
+    // ❌ ALL FAILED
     return {
       status: "failed",
       message: "All providers failed",
     }
+
   } catch (error) {
     console.error("Data switch error:", error)
 
