@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     const amount = Number(body.amount)
 
     // ✅ VALIDATION
-    if (!phone  !bundle_id  !amount || amount <= 0) {
+    if (!phone  || !bundle_id || !amount || amount <= 0) {
       return NextResponse.json(
         { error: "Invalid input" },
         { status: 400 }
