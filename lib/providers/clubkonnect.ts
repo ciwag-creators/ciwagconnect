@@ -1,104 +1,49 @@
-// ./lib/providers/clubkonnect.ts
-
-// =============================
-// Airtime Purchase
-// =============================
-export async function clubAirtime(
-  phone: string,
-  amount: number,
-  network: string
-) {
-  try {
-
-    const url = `${process.env.CLUB_BASE_URL}/topup`
-
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        user: process.env.CLUB_USER,
-        key: process.env.CLUB_KEY,
-        phone,
-        network,
-        amount,
-      }),
-    })
-
-    const text = await res.text()
-
-    console.log("ClubKonnect Airtime Raw Response:", text)
-
-    try {
-      return JSON.parse(text)
-    } catch {
-      return {
-        status: "failed",
-        message: "Invalid ClubKonnect response",
-        raw: text,
-      }
-    }
-
-  } catch (error) {
-
-    console.error("ClubKonnect Airtime Error:", error)
-
-    return {
-      status: "failed",
-      message: "ClubKonnect airtime failed",
-    }
-  }
-}
-
-
-
 export async function clubData(
   phone: string,
-  plan: string,
-  amount: number,
+  bundle_id: number,
   network: string
 ) {
   try {
+    const request_id = `ck_${Date.now()}_${Math.random()
+      .toString(36)
+      .slice(2)}`
 
-    const url = `${process.env.CLUB_BASE_URL}/data`
+    const baseUrl =
+      "https://www.nellobytesystems.com/APIDatabundleV1.asp"
+
+    const url = `${baseUrl}?UserID=${process.env.CLUB_USER_ID}&APIKey=${process.env.CLUB_API_KEY}&MobileNetwork=${network.toUpperCase()}&DataPlan=${bundle_id}&MobileNumber=${phone}&RequestID=${request_id}`
 
     const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        user: process.env.CLUB_USER,
-        key: process.env.CLUB_KEY,
-        phone,
-        network,
-        plan,
-        amount,
-      }),
+      method: "GET",
     })
 
-    const text = await res.text()
+    const data = await res.json()
 
-    console.log("ClubKonnect Data Raw Response:", text)
+    console.log("Clubkonnect Data:", data)
 
-    try {
-      return JSON.parse(text)
-    } catch {
+    // ✅ NORMALIZE RESPONSE
+    if (
+      data?.status === "ORDER_RECEIVED" ||
+      data?.status === "SUCCESS"
+    ) {
       return {
-        status: "failed",
-        message: "Invalid ClubKonnect data response",
-        raw: text,
+        status: "success",
+        reference: request_id,
+        message: "Success",
       }
     }
 
-  } catch (error) {
+    return {
+      status: "failed",
+      message: data?.status || "Clubkonnect failed",
+    }
 
-    console.error("ClubKonnect Data Error:", error)
+  } catch (error) {
+    console.error("Clubkonnect error:", error)
 
     return {
       status: "failed",
-      message: "ClubKonnect data failed",
+      message: "Clubkonnect request failed",
     }
   }
 }

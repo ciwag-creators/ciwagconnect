@@ -1,52 +1,44 @@
+const BASE_URL = "https://iacafe.com.ng/devapi/v1"
+
 export async function buyAirtime(
   phone: string,
-  amount: number,
-  network: string
+  network: string,
+  amount: number
 ) {
   try {
-    const res = await fetch(
-      `${process.env.IACAFE_BASE_URL}/airtime`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.IACAFE_API_KEY}`,
-        },
-        body: JSON.stringify({
-          request_id: `air_${network}_${Date.now()}`,
-          phone,
-          service_id: network.toLowerCase(),
-          amount,
-        }),
-      }
-    )
+    const request_id = `air_${network}_${Date.now()}_${Math.random()
+      .toString(36)
+      .slice(2)}`
 
-    const text = await res.text()
-    console.log("IAcafe Airtime Raw:", text)
+    const res = await fetch(`${BASE_URL}/airtime`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.IACAFE_API_KEY}`,
+      },
+      body: JSON.stringify({
+        request_id,
+        phone,
+        service_id: network.toLowerCase(),
+        amount,
+      }),
+    })
 
-    let data
-    try {
-      data = JSON.parse(text)
-    } catch {
-      return { status: "failed", raw: text }
-    }
+    const data = await res.json()
 
-    if (data?.status === "success" || data?.success === true) {
+    if (data?.status === "success" || data?.status === true) {
       return {
         status: "success",
-        provider: "iacafe",
-        data,
+        reference: data.request_id,
+        message: data.message,
       }
     }
 
-    return {
-      status: "failed",
-      message: data?.message || "IAcafe failed",
-      data,
-    }
+    return { status: "failed", message: data?.message }
 
   } catch (error) {
-    console.error("IAcafe Error:", error)
-    return { status: "failed" }
+    console.error("Iacafe Airtime error:", error)
+
+    return { status: "failed", message: "Request failed" }
   }
 }

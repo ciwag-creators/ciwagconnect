@@ -11,16 +11,16 @@ const supabase = createClient(
 type ProviderResponse = {
   status: string
   provider?: string
-  data?: any
+  reference?: string
   message?: string
 }
 
 export async function buyDataSwitch(
   phone: string,
-  bundle_id: string
+  bundle_id: number
 ): Promise<ProviderResponse> {
   try {
-    // ✅ GET ACTIVE PROVIDERS ORDERED BY PRIORITY
+    // ✅ FETCH ACTIVE PROVIDERS (ORDERED)
     const { data: providers, error } = await supabase
       .from("vtu_providers")
       .select("*")
@@ -37,39 +37,43 @@ export async function buyDataSwitch(
       return { status: "failed", message: "No active provider" }
     }
 
-    // ✅ LOOP THROUGH PROVIDERS (VERY IMPORTANT)
+    // ✅ LOOP THROUGH PROVIDERS
     for (const provider of providers) {
       try {
         let res: any = null
 
         // =====================
-        // SWITCH PER PROVIDER
+        // PROVIDER SWITCH
         // =====================
+
+        if (provider.provider === "cheapdata") {
+          res = await cheapData(phone, bundle_id)
+        }
+
         if (provider.provider === "iacafe") {
-          res = await iacafeData(phone, plan, amount, network)
+          // adjust inside provider file if needed
+          res = await iacafeData(phone, bundle_id, provider.network)
         }
 
         if (provider.provider === "clubkonnect") {
-          res = await clubData(phone, plan, amount, network)
+          // adjust inside provider file if needed
+          res = await clubData(phone, bundle_id, provider.network)
         }
 
-        if (provider.provider === "cheapdata") {
-          res = await cheapData(phone, network, plan, amount)
-        }
+        console.log(`${provider.provider} response:`, res)
 
-        console.log(${provider.provider} response:, res)
-
-        // ✅ SUCCESS CHECK (NORMALIZED)
+        // ✅ NORMALIZED SUCCESS CHECK
         if (res && res.status === "success") {
           return {
             status: "success",
             provider: provider.provider,
-            data: res.data,
+            reference: res.reference,
+            message: res.message,
           }
         }
 
       } catch (err) {
-        console.log(${provider.provider} failed, trying next...)
+        console.log(`${provider.provider} failed, trying next...`)
       }
     }
 
