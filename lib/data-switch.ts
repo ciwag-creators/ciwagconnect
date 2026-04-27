@@ -47,18 +47,16 @@ export async function buyDataSwitch(
         // =====================
 
         if (provider.provider === "cheapdata") {
-          res = await cheapData(phone, bundle_id)
-        }
+  res = await cheapData(phone, bundle_id)
+}
 
-        if (provider.provider === "iacafe") {
-          // adjust inside provider file if needed
-          res = await iacafeData(phone, bundle_id, provider.network)
-        }
+if (provider.provider === "iacafe") {
+  res = await iacafeData(phone, bundle_id, provider.network)
+}
 
-        if (provider.provider === "clubkonnect") {
-          // adjust inside provider file if needed
-          res = await clubData(phone, bundle_id, provider.network)
-        }
+if (provider.provider === "clubkonnect") {
+  res = await clubData(phone, bundle_id, provider.network)
+}
 
         console.log(`${provider.provider} response:`, res)
 
