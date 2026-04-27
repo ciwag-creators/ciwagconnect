@@ -1,134 +1,145 @@
 import { buyAirtime as iacafeAirtime } from "./iacafe"
 import { buyData as iacafeData } from "./iacafe-data"
 import { clubAirtime, clubData } from "./clubkonnect"
-import {
-  payElectricity as buyElectricityVtpass,
-  payCable as buyCableVtpass,
-} from "./vtpass"
+import { cheapData } from "./cheapdata"
+import { cheapAirtime } from "./cheapdata"
 
-// =============================
-// Airtime
-// =============================
-export async function buyAirtime(
-  network: string,
+type ProviderResponse = {
+  status: string
+  provider?: string
+  reference?: string
+  message?: string
+}
+
+export async function providerSwitchAirtime(
   phone: string,
-  amount: number
-): Promise<any> {
+  amount: number,
+  network: string
+): Promise<ProviderResponse> {
   try {
-    const primary = await iacafeAirtime(
-      phone,
-      amount,
-      network
-    )
+    // =====================
+    // 1. CHEAPDATA (PRIMARY)
+    // =====================
+    const cheap = await cheapAirtime(phone, network, amount)
 
-    if (primary?.status === "success") {
+    if (cheap?.status === "success") {
       return {
         status: "success",
-        provider: "iacafe",
-        data: primary.data,
+        provider: "cheapdata",
+        reference: cheap.reference,
+        message: cheap.message,
       }
     }
 
-    console.log("IAcafe failed, switching to ClubKonnect...")
-  } catch (err) {
-    console.log("IAcafe error:", err)
-  }
-
-  // fallback
-  const fallback = await clubAirtime(
-    phone,
-    amount,
-    network
-  )
-
-  if (fallback?.status === "success") {
-    return fallback
-  }
-
-  return {
-    status: "failed",
-    message: "All providers failed",
-  }
-}
-
-// =============================
-// Data
-// =============================
-export async function buyData(
-  network: string,
-  phone: string,
-  plan: string,
-  amount: number
-): Promise<any> {
-  try {
-    const primary = await iacafeData(
+    // =====================
+    // 2. IACAFE (BACKUP)
+    // =====================
+    const iacafe = await iacafeAirtime(
       phone,
-      plan,
-      amount,
-      network
+      network,
+      amount
     )
 
-    if (primary?.status === "success") {
+    if (iacafe?.status === "success") {
       return {
         status: "success",
         provider: "iacafe",
-        data: primary.data,
+        reference: iacafe.reference,
+        message: iacafe.message,
       }
     }
 
-    console.log("IAcafe data failed, switching...")
-  } catch (err) {
-    console.log("IAcafe data error:", err)
-  }
+    // =====================
+    // 3. CLUBKONNECT (FALLBACK)
+    // =====================
+    const club = await clubAirtime(phone, network, amount)
 
-  // fallback
-  const fallback = await clubData(
-    phone,
-    plan,
-    amount,
-    network
-  )
+    if (club?.status === "success") {
+      return {
+        status: "success",
+        provider: "clubkonnect",
+        reference: club.reference,
+        message: club.message,
+      }
+    }
 
-  if (fallback?.status === "success") {
-    return fallback
-  }
+    return {
+      status: "failed",
+      message: "All airtime providers failed",
+    }
+  } catch (error) {
+    console.error("Airtime switch error:", error)
 
-  return {
-    status: "failed",
-    message: "All providers failed",
+    return {
+      status: "failed",
+      message: "Airtime switch system error",
+    }
   }
 }
 
-// =============================
-// Electricity
-// =============================
-export async function buyElectricity(
-  disco: string,
-  meter: string,
-  amount: number,
-  meterType: string
-) {
-  return await buyElectricityVtpass(
-    disco,
-    meter,
-    amount,
-    meterType
-  )
-}
 
-// =============================
-// Cable
-// =============================
-export async function buyCable(
-  provider: string,
-  smartcard: string,
-  amount: number,
-  plan: string
-) {
-  return await buyCableVtpass(
-    provider,
-    smartcard,
-    amount,
-    plan
-  )
+// =====================
+// DATA SWITCH
+// =====================
+export async function providerSwitchData(
+  phone: string,
+  bundle_id: number,
+  network: string
+): Promise<ProviderResponse> {
+  try {
+    // =====================
+    // 1. CHEAPDATA
+    // =====================
+    const cheap = await cheapData(phone, bundle_id)
+
+    if (cheap?.status === "success") {
+      return {
+        status: "success",
+        provider: "cheapdata",
+        reference: cheap.reference,
+        message: cheap.message,
+      }
+    }
+
+    // =====================
+    // 2. IACAFE
+    // =====================
+    const iacafe = await iacafeData(phone, bundle_id, network)
+
+    if (iacafe?.status === "success") {
+      return {
+        status: "success",
+        provider: "iacafe",
+        reference: iacafe.reference,
+        message: iacafe.message,
+      }
+    }
+
+    // =====================
+    // 3. CLUBKONNECT
+    // =====================
+    const club = await clubData(phone, bundle_id, network)
+
+    if (club?.status === "success") {
+      return {
+        status: "success",
+        provider: "clubkonnect",
+        reference: club.reference,
+        message: club.message,
+      }
+    }
+
+    return {
+      status: "failed",
+      message: "All data providers failed",
+    }
+
+  } catch (error) {
+    console.error("Data switch error:", error)
+
+    return {
+      status: "failed",
+      message: "Data switch system error",
+    }
+  }
 }
