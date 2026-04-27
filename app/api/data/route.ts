@@ -1,16 +1,25 @@
+import { NextResponse } from "next/server"
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
+import { cheapData } from "@/lib/providers/cheapdata"
+
 export async function POST(req: Request) {
   try {
-    const { phone, bundle_id, amount } = await req.json()
+    const body = await req.json()
 
-    const numericAmount = Number(amount)
+    const phone = body.phone
+    const bundle_id = Number(body.bundle_id)
+    const amount = Number(body.amount)
 
-    if (!phone  !bundle_id  !numericAmount) {
+    // ✅ VALIDATION
+    if (!phone  !bundle_id  !amount || amount <= 0) {
       return NextResponse.json(
         { error: "Invalid input" },
         { status: 400 }
       )
     }
 
+    // ✅ INIT SUPABASE (SERVER)
     const cookieStore = cookies()
 
     const supabase = createServerClient(
@@ -27,72 +36,90 @@ export async function POST(req: Request) {
       }
     )
 
+    // ✅ AUTH CHECK
     const {
       data: { user },
+      error: userError,
     } = await supabase.auth.getUser()
 
-    if (!user) {
+    if (userError || !user) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       )
     }
 
-    const { data: wallet } = await supabase
+    // ✅ FETCH WALLET
+    const { data: wallet, error: walletError } = await supabase
       .from("wallets")
       .select("*")
       .eq("user_id", user.id)
       .single()
 
-    if (!wallet) {
+    if (walletError || !wallet) {
       return NextResponse.json(
         { error: "Wallet not found" },
         { status: 404 }
       )
     }
 
-    if (Number(wallet.balance) < numericAmount) {
+    const currentBalance = Number(wallet.balance)
+
+    if (currentBalance < amount) {
       return NextResponse.json(
         { error: "Insufficient balance" },
         { status: 400 }
       )
     }
 
-    const providerResponse = await cheapData(
-      phone,
-      bundle_id
-    )
+    // ✅ CALL PROVIDER (CHEAPDATA)
+    const providerResponse = await cheapData(phone, bundle_id)
 
     if (providerResponse.status !== "success") {
       return NextResponse.json(
-        { error: providerResponse.message },
+        { error: providerResponse.message || "Provider failed" },
         { status: 500 }
       )
     }
 
-    const newBalance =
-      Number(wallet.balance) - numericAmount
+    // ✅ DEDUCT WALLET
+    const newBalance = currentBalance - amount
 
-    await supabase
+    const { error: updateError } = await supabase
       .from("wallets")
       .update({ balance: newBalance })
       .eq("user_id", user.id)
 
+    if (updateError) {
+      return NextResponse.json(
+        { error: "Failed to update wallet" },
+        { status: 500 }
+      )
+    }
+
+    // ✅ SAVE TRANSACTION
     const reference = "DATA-" + Date.now()
 
-    await supabase.from("transactions").insert({
-      user_id: user.id,
-      type: "data",
-      amount: numericAmount,
-      charged: numericAmount,
-      profit: 0,
-      reference,
-      status: "success",
-      phone,
-      bundle_id,
-      provider: "cheapdata",
-    })
+    const { error: txError } = await supabase
+      .from("transactions")
+      .insert({
+        user_id: user.id,
+        type: "data",
+        amount: amount,
+        charged: amount,
+        profit: 0,
+        reference,
+        status: "success",
+        phone,
+        bundle_id,
+        provider: "cheapdata",
+      })
 
+    if (txError) {
+      console.error("Transaction save error:", txError)
+    }
+
+    // ✅ SUCCESS RESPONSE
     return NextResponse.json({
       success: true,
       reference,
@@ -100,7 +127,7 @@ export async function POST(req: Request) {
     })
 
   } catch (error) {
-    console.error(error)
+    console.error("DATA ROUTE ERROR:", error)
 
     return NextResponse.json(
       { error: "Something went wrong" },
