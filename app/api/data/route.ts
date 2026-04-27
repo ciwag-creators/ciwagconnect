@@ -1,28 +1,17 @@
-import { NextResponse } from "next/server"
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
-import { cheapData } from "@/lib/providers/cheapdata"
-
 export async function POST(req: Request) {
   try {
-    const { network, phone, plan, amount } =
-      await req.json()
+    const { phone, bundle_id, amount } = await req.json()
 
     const numericAmount = Number(amount)
 
-    if (
-      !network ||
-      !phone ||
-      !plan ||
-      !numericAmount
-    ) {
+    if (!phone  !bundle_id  !numericAmount) {
       return NextResponse.json(
         { error: "Invalid input" },
         { status: 400 }
       )
     }
 
-    const cookieStore = await cookies()
+    const cookieStore = cookies()
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -62,9 +51,7 @@ export async function POST(req: Request) {
       )
     }
 
-    let finalAmount = numericAmount
-
-    if (Number(wallet.balance) < finalAmount) {
+    if (Number(wallet.balance) < numericAmount) {
       return NextResponse.json(
         { error: "Insufficient balance" },
         { status: 400 }
@@ -73,20 +60,18 @@ export async function POST(req: Request) {
 
     const providerResponse = await cheapData(
       phone,
-      network,
-      plan,
-      numericAmount
+      bundle_id
     )
 
     if (providerResponse.status !== "success") {
       return NextResponse.json(
-        { error: "Data provider failed" },
+        { error: providerResponse.message },
         { status: 500 }
       )
     }
 
     const newBalance =
-      Number(wallet.balance) - finalAmount
+      Number(wallet.balance) - numericAmount
 
     await supabase
       .from("wallets")
@@ -99,12 +84,12 @@ export async function POST(req: Request) {
       user_id: user.id,
       type: "data",
       amount: numericAmount,
-      charged: finalAmount,
+      charged: numericAmount,
       profit: 0,
       reference,
       status: "success",
       phone,
-      plan,
+      bundle_id,
       provider: "cheapdata",
     })
 
@@ -115,7 +100,7 @@ export async function POST(req: Request) {
     })
 
   } catch (error) {
-    console.error("Data API Error:", error)
+    console.error(error)
 
     return NextResponse.json(
       { error: "Something went wrong" },
