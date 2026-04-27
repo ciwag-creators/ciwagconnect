@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
 import { buyData as iacafeData } from "./providers/iacafe-data"
-import { clubData } from "./providers/clubkonnect"
+import { clubAirtime } from "./providers/clubkonnect"
 import { cheapData } from "./providers/cheapdata"
 
 const supabase = createClient(
@@ -55,7 +55,7 @@ if (provider.provider === "iacafe") {
 }
 
 if (provider.provider === "clubkonnect") {
-  res = await clubData(phone, bundle_id, provider.network)
+  res = await clubAirtime(phone, provider.network, bundle_id)
 }
 
         console.log(`${provider.provider} response:`, res)

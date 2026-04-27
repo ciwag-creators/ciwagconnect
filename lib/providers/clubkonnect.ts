@@ -1,27 +1,23 @@
-export async function clubData(
+export async function clubAirtime(
   phone: string,
-  bundle_id: number,
-  network: string
+  network: string,
+  amount: number
 ) {
   try {
-    const request_id = `ck_${Date.now()}_${Math.random()
+    const request_id = `ck_air_${Date.now()}_${Math.random()
       .toString(36)
       .slice(2)}`
 
     const baseUrl =
-      "https://www.nellobytesystems.com/APIDatabundleV1.asp"
+      "https://www.nellobytesystems.com/APIAirtimeV1.asp"
 
-    const url = `${baseUrl}?UserID=${process.env.CLUB_USER_ID}&APIKey=${process.env.CLUB_API_KEY}&MobileNetwork=${network.toUpperCase()}&DataPlan=${bundle_id}&MobileNumber=${phone}&RequestID=${request_id}`
+    const url = `${baseUrl}?UserID=${process.env.CLUB_USER_ID}&APIKey=${process.env.CLUB_API_KEY}&MobileNetwork=${network.toUpperCase()}&Amount=${amount}&MobileNumber=${phone}&RequestID=${request_id}`
 
-    const res = await fetch(url, {
-      method: "GET",
-    })
-
+    const res = await fetch(url)
     const data = await res.json()
 
-    console.log("Clubkonnect Data:", data)
+    console.log("Clubkonnect Airtime:", data)
 
-    // ✅ NORMALIZE RESPONSE
     if (
       data?.status === "ORDER_RECEIVED" ||
       data?.status === "SUCCESS"
@@ -35,15 +31,15 @@ export async function clubData(
 
     return {
       status: "failed",
-      message: data?.status || "Clubkonnect failed",
+      message: data?.status || "Airtime failed",
     }
 
   } catch (error) {
-    console.error("Clubkonnect error:", error)
+    console.error("Clubkonnect Airtime error:", error)
 
     return {
       status: "failed",
-      message: "Clubkonnect request failed",
+      message: "Request failed",
     }
   }
 }
